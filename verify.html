@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจสอบเกียรติบัตร — NP-LearnLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+</head>
+<body>
+  <div class="lab-main" style="max-width:640px;margin:0 auto;">
+    <div class="page-head" style="text-align:center;margin-top:30px;">
+      <h1>ตรวจสอบเกียรติบัตร</h1>
+      <p>กรอกเลขที่เกียรติบัตร หรือสแกน QR code จากใบเกียรติบัตรโดยตรง</p>
+    </div>
+    <div class="panel" style="max-width:420px;margin:0 auto 20px;">
+      <div class="field"><label>เลขที่เกียรติบัตร</label><input id="certNoInput" placeholder="เช่น NPL-2569-00123"></div>
+      <button class="btn btn-brass btn-block" onclick="doVerify()">ตรวจสอบ</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <script src="js/verify.js"></script>
+</body>
+</html>

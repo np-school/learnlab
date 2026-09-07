@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NP-LearnLab — จัดการอบรม</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+</head>
+<body>
+
+<div id="signinScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <h1 style="font-size:22px;">NP-LearnLab · เจ้าหน้าที่</h1>
+  <button class="btn btn-brass" onclick="doSignIn()">เข้าสู่ระบบด้วย Google</button>
+  <p id="signinError" style="color:var(--rust);font-size:13px;display:none;"></p>
+</div>
+
+<div id="deniedScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+  <h2>ไม่มีสิทธิ์เข้าถึงหน้านี้</h2>
+  <p style="color:var(--ink-soft);font-size:13px;">บัญชีนี้ไม่มีสิทธิ์ <code>training</code> ติดต่อ SuperAdmin เพื่อขอสิทธิ์</p>
+</div>
+
+<div id="appShell" class="lab-shell" style="display:none;">
+  <aside class="lab-rail">
+    <div class="brand">NP-LearnLab<small id="userLabel"></small></div>
+    <nav><a class="tab active" href="#">จัดการหลักสูตร</a></nav>
+    <div class="rail-foot"><a href="#" onclick="auth.signOut();return false;" style="color:#C9C3B4;">ออกจากระบบ</a></div>
+  </aside>
+  <main class="lab-main">
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div><h1>จัดการอบรมออนไลน์</h1><p>สร้างหลักสูตร เพิ่มเนื้อหา ข้อสอบ และติดตามผู้เรียน</p></div>
+      <button class="btn btn-brass" onclick="openCourseModal(null)"><i data-lucide="plus" style="width:15px;height:15px;"></i> สร้างหลักสูตรใหม่</button>
+    </div>
+    <div id="body"></div>
+  </main>
+</div>
+
+<div class="modal-bg" id="courseModal"><div class="modal-box wide" id="courseModalBody"></div></div>
+<div class="modal-bg" id="lessonModal"><div class="modal-box" id="lessonModalBody"></div></div>
+<div class="modal-bg" id="questionModal"><div class="modal-box" id="questionModalBody"></div></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
