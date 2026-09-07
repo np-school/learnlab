@@ -22,23 +22,59 @@
   <p id="signinError" style="color:var(--rust);font-size:13px;display:none;"></p>
 </div>
 
-<div id="appShell" class="lab-shell" style="display:none;">
-  <aside class="lab-rail">
-    <div class="brand">NP-LearnLab<small id="userLabel"></small></div>
-    <nav>
-      <a class="tab active" href="#">หลักสูตรอบรม</a>
-      <a class="tab" href="verify.html" target="_blank">ตรวจสอบเกียรติบัตร</a>
-    </nav>
-    <div class="rail-foot"><a href="#" onclick="auth.signOut();return false;" style="color:#C9C3B4;">ออกจากระบบ</a></div>
-  </aside>
-  <main class="lab-main">
-    <div class="page-head">
-      <h1>หลักสูตรอบรมออนไลน์</h1>
-      <p>เรียนเนื้อหาให้ครบตามลำดับ แล้วทำแบบทดสอบเพื่อรับเกียรติบัตร</p>
+<div id="appShell" class="app-shell-lab" style="display:none;">
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="labHamburger" onclick="toggleLabSidebar()" class="navbar-hamburger">
+          <i data-lucide="menu" style="width:20px;height:20px;"></i>
+        </button>
+        <div class="navbar-brand-icon"><i data-lucide="graduation-cap" style="width:20px;height:20px;"></i></div>
+        <div class="navbar-divider">
+          <div class="navbar-title">NP-LearnLab</div>
+          <div class="navbar-subtitle">ระบบอบรมออนไลน์ของโรงเรียน</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="userLabel" class="navbar-user-email"></span>
+        <button onclick="auth.signOut()" class="navbar-logout-btn" title="ออกจากระบบ">
+          <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
     </div>
-    <div id="body"></div>
-  </main>
+  </nav>
+  <div class="lab-body">
+    <div class="sidebar-wrap" id="labSidebar">
+      <div class="sidebar-inner">
+        <div class="sec-label">เมนูหลัก</div>
+        <a class="sidebar-btn active" href="#">
+          <i data-lucide="book-open" style="width:16px;height:16px;"></i><span>หลักสูตรอบรม</span>
+        </a>
+        <a class="sidebar-btn" href="verify.html" target="_blank">
+          <i data-lucide="badge-check" style="width:16px;height:16px;"></i><span>ตรวจสอบเกียรติบัตร</span>
+        </a>
+      </div>
+    </div>
+    <div id="labSidebarOverlay" class="sidebar-overlay-lab" onclick="toggleLabSidebar(false)"></div>
+    <main class="lab-main">
+      <div class="page-head">
+        <h1>หลักสูตรอบรมออนไลน์</h1>
+        <p>เรียนเนื้อหาให้ครบตามลำดับ แล้วทำแบบทดสอบเพื่อรับเกียรติบัตร</p>
+      </div>
+      <div id="body"></div>
+    </main>
+  </div>
 </div>
+<script>
+function toggleLabSidebar(force){
+  var sb = document.getElementById('labSidebar');
+  var ov = document.getElementById('labSidebarOverlay');
+  if(!sb) return;
+  var open = typeof force === 'boolean' ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  if(ov) ov.classList.toggle('open', open);
+}
+</script>
 
 <div class="modal-bg" id="examModal"><div class="modal-box wide" id="examModalBody"></div></div>
 <div class="modal-bg" id="resultModal"><div class="modal-box" id="resultModalBody"></div></div>

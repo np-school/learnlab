@@ -26,20 +26,56 @@
   <p style="color:var(--ink-soft);font-size:13px;">บัญชีนี้ไม่มีสิทธิ์ <code>training</code> ติดต่อ SuperAdmin เพื่อขอสิทธิ์</p>
 </div>
 
-<div id="appShell" class="lab-shell" style="display:none;">
-  <aside class="lab-rail">
-    <div class="brand">NP-LearnLab<small id="userLabel"></small></div>
-    <nav><a class="tab active" href="#">จัดการหลักสูตร</a></nav>
-    <div class="rail-foot"><a href="#" onclick="auth.signOut();return false;" style="color:#C9C3B4;">ออกจากระบบ</a></div>
-  </aside>
-  <main class="lab-main">
-    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;">
-      <div><h1>จัดการอบรมออนไลน์</h1><p>สร้างหลักสูตร เพิ่มเนื้อหา ข้อสอบ และติดตามผู้เรียน</p></div>
-      <button class="btn btn-brass" onclick="openCourseModal(null)"><i data-lucide="plus" style="width:15px;height:15px;"></i> สร้างหลักสูตรใหม่</button>
+<div id="appShell" class="app-shell-lab" style="display:none;">
+  <nav class="navbar dark">
+    <div class="navbar-inner">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="labHamburger" onclick="toggleLabSidebar()" class="navbar-hamburger">
+          <i data-lucide="menu" style="width:20px;height:20px;"></i>
+        </button>
+        <div class="navbar-brand-icon"><i data-lucide="graduation-cap" style="width:20px;height:20px;"></i></div>
+        <div class="navbar-divider">
+          <div class="navbar-title">NP-LearnLab · เจ้าหน้าที่</div>
+          <div class="navbar-subtitle">จัดการอบรมออนไลน์</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="userLabel" class="navbar-user-email"></span>
+        <button onclick="auth.signOut()" class="navbar-logout-btn" title="ออกจากระบบ">
+          <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
     </div>
-    <div id="body"></div>
-  </main>
+  </nav>
+  <div class="lab-body">
+    <div class="sidebar-wrap" id="labSidebar">
+      <div class="sidebar-inner">
+        <div class="sec-label">เมนูหลัก</div>
+        <a class="sidebar-btn active" href="#">
+          <i data-lucide="layers" style="width:16px;height:16px;"></i><span>จัดการหลักสูตร</span>
+        </a>
+      </div>
+    </div>
+    <div id="labSidebarOverlay" class="sidebar-overlay-lab" onclick="toggleLabSidebar(false)"></div>
+    <main class="lab-main">
+      <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div><h1>จัดการอบรมออนไลน์</h1><p>สร้างหลักสูตร เพิ่มเนื้อหา ข้อสอบ และติดตามผู้เรียน</p></div>
+        <button class="btn btn-brass" onclick="openCourseModal(null)"><i data-lucide="plus" style="width:15px;height:15px;"></i> สร้างหลักสูตรใหม่</button>
+      </div>
+      <div id="body"></div>
+    </main>
+  </div>
 </div>
+<script>
+function toggleLabSidebar(force){
+  var sb = document.getElementById('labSidebar');
+  var ov = document.getElementById('labSidebarOverlay');
+  if(!sb) return;
+  var open = typeof force === 'boolean' ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  if(ov) ov.classList.toggle('open', open);
+}
+</script>
 
 <div class="modal-bg" id="courseModal"><div class="modal-box wide" id="courseModalBody"></div></div>
 <div class="modal-bg" id="lessonModal"><div class="modal-box" id="lessonModalBody"></div></div>

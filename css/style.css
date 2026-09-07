@@ -71,45 +71,80 @@ h1,h2,h3,h4{ font-family:var(--font-display); font-weight:800; margin:0; color:v
 a{ color:inherit; }
 button{ font-family:var(--font-body); }
 
-/* ---------- โครงหน้า: navbar โทนน้ำเงิน + sidebar โค้งมน ---------- */
-.lab-shell{ display:flex; min-height:100vh; }
+/* ---------- โครงหน้า: navbar บน + sidebar ซ้าย (เหมือน webapp .app-shell) ---------- */
+.app-shell-lab{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
 
-.lab-rail{
-  width:260px; flex-shrink:0;
-  background:var(--panel);
-  color:var(--ink);
-  border-right:1px solid var(--line);
-  padding:0;
-  display:flex; flex-direction:column;
-  position:sticky; top:0; height:100vh;
-}
-.lab-rail .brand{
-  font-family:var(--font-display); font-weight:800; font-size:17px;
-  color:#fff;
+/* ── Navbar บนสุด — โครงสร้าง/คลาสตรงกับ .navbar ของ webapp ── */
+.navbar{
+  flex-shrink:0;
   background:var(--accent);
-  padding:20px 22px;
-  margin-bottom:14px;
+  padding:12px 20px;
   box-shadow:0 4px 12px rgba(29,78,216,.25);
 }
-.lab-rail .brand small{ display:block; font-family:var(--font-body); font-weight:400; font-size:12px; color:var(--accent-light); margin-top:3px; }
-.lab-rail nav{ display:flex; flex-direction:column; gap:4px; padding:0 12px; }
-.lab-rail .tab{
-  display:flex; align-items:center; gap:10px;
-  padding:12px 14px; font-size:14px; font-weight:700; color:var(--ink-soft);
-  border-radius:12px; cursor:pointer; text-decoration:none;
-  transition:background .15s, color .15s;
+.navbar.dark{
+  background:var(--c-ink-deep);
+  box-shadow:0 4px 16px rgba(0,0,0,.35);
 }
-.lab-rail .tab:hover{ background:var(--paper); }
-.lab-rail .tab.active{ color:#fff; background:var(--accent); box-shadow:0 8px 15px -3px var(--accent-ring); }
-.lab-rail .rail-foot{ margin-top:auto; padding:16px 22px; font-size:12px; color:var(--ink-soft); border-top:1px solid var(--line); }
-.lab-rail .rail-foot a{ color:var(--ink-soft) !important; font-weight:600; }
-.lab-rail .rail-foot a:hover{ color:var(--rust) !important; }
+.navbar-inner{
+  max-width:1280px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.navbar-hamburger{
+  padding:8px; background:rgba(255,255,255,.15); border:none; border-radius:8px;
+  cursor:pointer; color:#fff; display:none;
+}
+.navbar-brand-icon{
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.3);
+  display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+}
+.navbar-divider{ border-left:1px solid rgba(255,255,255,.25); padding-left:12px; }
+.navbar-title{ font-size:15px; font-weight:800; color:#fff; line-height:1.2; }
+.navbar-subtitle{ font-size:11px; color:var(--accent-light); }
+.navbar.dark .navbar-subtitle{ color:#93a3b8; }
+.navbar-user-email{ font-size:12.5px; font-weight:600; color:#fff; display:none; }
+.navbar-logout-btn{
+  padding:7px; background:rgba(255,255,255,.15); border:none; border-radius:8px;
+  cursor:pointer; color:#fff; display:flex;
+}
+.navbar-logout-btn:hover{ background:rgba(255,255,255,.28); }
+@media (min-width:640px){ .navbar-user-email{ display:inline; } }
 
-.lab-main{ flex:1; padding:28px 32px; max-width:1120px; }
-@media (max-width:800px){
-  .lab-shell{ flex-direction:column; }
-  .lab-rail{ position:relative; height:auto; width:100%; padding:0; }
-  .lab-rail .brand{ box-shadow:none; }
+/* ── ส่วนล่าง: sidebar + เนื้อหา ── */
+.lab-body{ display:flex; flex:1; min-height:0; overflow:hidden; }
+
+.sidebar-wrap{ width:250px; flex-shrink:0; transition:transform .3s ease; }
+.sidebar-inner{
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  height:100%; padding:16px 12px;
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.sec-label{
+  padding:10px 14px 6px; font-size:10px; font-weight:800; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:1.5px;
+}
+.sidebar-btn{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:12px; font-weight:700; font-size:14px;
+  color:var(--ink-soft); width:100%; background:none; border:none; cursor:pointer;
+  text-decoration:none; transition:all .15s; margin-bottom:2px;
+}
+.sidebar-btn:hover{ background:var(--paper); }
+.sidebar-btn.active{ background:var(--accent); color:#fff; box-shadow:0 8px 15px -3px var(--accent-ring); }
+
+.sidebar-overlay-lab{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:199; }
+.sidebar-overlay-lab.open{ display:block; }
+
+.lab-main{ flex:1; min-width:0; padding:28px 32px; max-width:1120px; margin:0 auto; width:100%; overflow-y:auto; }
+
+@media (max-width:900px){
+  .navbar-hamburger{ display:flex; }
+  .sidebar-wrap{
+    position:fixed; top:0; left:0; height:100vh; z-index:200;
+    transform:translateX(-100%); box-shadow:4px 0 24px rgba(0,0,0,.12);
+  }
+  .sidebar-wrap.open{ transform:translateX(0); }
   .lab-main{ padding:18px; }
 }
 
