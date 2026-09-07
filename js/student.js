@@ -36,8 +36,23 @@ auth.onAuthStateChanged(function(user) {
   document.getElementById('signinScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'flex';
   document.getElementById('userLabel').textContent = user.email;
+  checkStaffMenu();
   loadData();
 });
+
+/* แสดงเมนู "เจ้าหน้าที่" ในไซด์บาร์เฉพาะบัญชีที่มีสิทธิ์แอดมิน (admins/{email}.permissions.training === true)
+   ผู้ใช้ทั่วไปจะไม่เห็นเมนูนี้เลย — การกันสิทธิ์จริงยังคงอยู่ที่ admin.html/admin.js เสมอ
+   จุดนี้แค่ซ่อน-แสดงลิงก์ให้ตรงกับสิทธิ์ ไม่ใช่กลไกความปลอดภัย */
+function checkStaffMenu() {
+  db.collection('admins').doc(currentUser.email).get().then(function(doc) {
+    var isStaff = doc.exists && doc.data().permissions && doc.data().permissions.training === true;
+    var el = document.getElementById('staffMenuSection');
+    if (el) el.style.display = isStaff ? 'block' : 'none';
+  }).catch(function() {
+    var el = document.getElementById('staffMenuSection');
+    if (el) el.style.display = 'none';
+  });
+}
 
 function loadData() {
   Promise.all([
