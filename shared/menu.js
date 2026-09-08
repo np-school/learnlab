@@ -66,7 +66,7 @@ function renderShell(group, activeHref, profile) {
     const menu = MENUS[group];
     const items = menu.items.map(it => {
       const active = it.href === activeHref ? "active" : "";
-      return `<a class="sidebar-btn ${active}" href="${it.href}"><i data-lucide="${it.icon}" style="width:18px;height:18px"></i>${it.label}</a>`;
+      return `<a class="sidebar-btn ${active}" href="${it.href}" title="${it.label}"><i data-lucide="${it.icon}" style="width:18px;height:18px"></i><span class="sidebar-btn-label">${it.label}</span></a>`;
     }).join("");
 
     const name = (profile && profile.name) || "";
@@ -74,7 +74,7 @@ function renderShell(group, activeHref, profile) {
     const photo = (profile && profile.photoURL) || "";
     const footer = `
       <div class="sidebar-footer">
-        <img src="${photo}" alt="">
+        <img src="${photo}" alt="" title="${name || email}">
         <div class="sidebar-footer-body">
           <div class="sidebar-footer-name">${name || email}</div>
           <div class="sidebar-footer-email">${email}</div>
@@ -82,11 +82,29 @@ function renderShell(group, activeHref, profile) {
         <button class="sidebar-footer-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:15px;height:15px"></i></button>
       </div>`;
 
+    const isCollapsed = sidebarEl.classList.contains("collapsed");
+    const collapseBtn = `
+      <button class="sidebar-collapse-btn${isCollapsed ? " is-collapsed" : ""}" id="sidebarCollapseBtn"
+        onclick="toggleSidebarCollapse()" title="ย่อ/ขยายเมนู">
+        <i data-lucide="chevrons-left" style="width:14px;height:14px"></i>
+      </button>`;
+
     sidebarEl.innerHTML =
+      collapseBtn +
       `<button class="sidebar-close-btn" onclick="closeSidebar()"><i data-lucide="x" style="width:16px;height:16px"></i></button>` +
       `<div class="sidebar-group-label">${menu.label}</div>` +
       items + footer;
   }
 
   if (window.lucide) lucide.createIcons();
+}
+
+// ยุบ/ขยาย sidebar (เฉพาะจอ >900px — จำสถานะไว้ผ่าน localStorage ใช้ร่วมกันทุกหน้า)
+function toggleSidebarCollapse() {
+  const sidebarEl = document.getElementById("sidebar");
+  if (!sidebarEl) return;
+  const collapsed = sidebarEl.classList.toggle("collapsed");
+  try { localStorage.setItem("nplab_sidebar_collapsed", collapsed ? "1" : "0"); } catch (e) {}
+  const btn = document.getElementById("sidebarCollapseBtn");
+  if (btn) btn.classList.toggle("is-collapsed", collapsed);
 }

@@ -41,6 +41,7 @@
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 <div class="shell">
   <div class="sidebar" id="sidebar"></div>
+  <script>try{if(localStorage.getItem('nplab_sidebar_collapsed')==='1')document.getElementById('sidebar').classList.add('collapsed');}catch(e){}</script>
   <div class="content">
     <div class="page-header">
       <div class="page-title">การอบรมของฉัน</div>
