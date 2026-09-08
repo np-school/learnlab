@@ -37,7 +37,7 @@ const MENUS = {
   }
 };
 
-// วาด sidebar + role-switch ให้กับหน้าปัจจุบัน
+// วาด sidebar (รวม role-switch อยู่ในเมนูเดียวกัน) ให้กับหน้าปัจจุบัน
 // group: 'user' | 'instructor' | 'staff' (กลุ่มเมนูที่จะแสดงในหน้านี้)
 // activeHref: ชื่อไฟล์ปัจจุบัน เช่น 'dashboard.html'
 // profile: เอกสาร users/{uid} ของผู้ใช้ที่ล็อกอินอยู่ (มี field roles: string[])
@@ -45,24 +45,26 @@ function renderShell(group, activeHref, profile) {
   const roles = (profile && profile.roles) || ["user"];
   const availableGroups = Object.keys(MENUS).filter(g => g === "user" || roles.includes(g));
 
-  // role switch (แสดงเฉพาะเมื่อมีมากกว่า 1 กลุ่มเมนูให้เลือก)
-  const switchEl = document.getElementById("roleSwitch");
-  if (switchEl) {
-    if (availableGroups.length > 1) {
-      switchEl.style.display = "flex";
-      switchEl.innerHTML = availableGroups.map(g => {
-        const m = MENUS[g];
-        const active = g === group ? "active" : "";
-        return `<a class="${active}" href="${m.landing}"><i data-lucide="${m.icon}" style="width:13px;height:13px"></i>${m.label}</a>`;
-      }).join("");
-    } else {
-      switchEl.style.display = "none";
-    }
-  }
-
   // sidebar
   const sidebarEl = document.getElementById("sidebar");
   if (sidebarEl) {
+    // จุดเดียวที่ตัดสินใจสถานะยุบ/ขยาย อ่านจาก localStorage ทุกครั้งที่ render
+    // (กันเคสหน้าไหน sync ไม่ตรง กับ inline script กันจอกระพริบ)
+    let savedCollapsed = false;
+    try { savedCollapsed = localStorage.getItem("nplab_sidebar_collapsed") === "1"; } catch (e) {}
+    sidebarEl.classList.toggle("collapsed", savedCollapsed);
+
+    // role-switch — แสดงเป็นส่วนบนสุดของ sidebar เดียวกัน (เฉพาะเมื่อมีมากกว่า 1 กลุ่มเมนูให้เลือก)
+    let roleSwitchHtml = "";
+    if (availableGroups.length > 1) {
+      const roleItems = availableGroups.map(g => {
+        const m = MENUS[g];
+        const active = g === group ? "active" : "";
+        return `<a class="sidebar-btn ${active}" href="${m.landing}" title="${m.label}"><i data-lucide="${m.icon}" style="width:18px;height:18px"></i><span class="sidebar-btn-label">${m.label}</span></a>`;
+      }).join("");
+      roleSwitchHtml = `<div class="sidebar-group-label">สลับบทบาท</div>${roleItems}<div class="sidebar-divider"></div>`;
+    }
+
     const menu = MENUS[group];
     const items = menu.items.map(it => {
       const active = it.href === activeHref ? "active" : "";
@@ -82,9 +84,8 @@ function renderShell(group, activeHref, profile) {
         <button class="sidebar-footer-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:15px;height:15px"></i></button>
       </div>`;
 
-    const isCollapsed = sidebarEl.classList.contains("collapsed");
     const collapseBtn = `
-      <button class="sidebar-collapse-btn${isCollapsed ? " is-collapsed" : ""}" id="sidebarCollapseBtn"
+      <button class="sidebar-collapse-btn${savedCollapsed ? " is-collapsed" : ""}" id="sidebarCollapseBtn"
         onclick="toggleSidebarCollapse()" title="ย่อ/ขยายเมนู">
         <i data-lucide="chevrons-left" style="width:14px;height:14px"></i>
       </button>`;
@@ -92,6 +93,7 @@ function renderShell(group, activeHref, profile) {
     sidebarEl.innerHTML =
       collapseBtn +
       `<button class="sidebar-close-btn" onclick="closeSidebar()"><i data-lucide="x" style="width:16px;height:16px"></i></button>` +
+      roleSwitchHtml +
       `<div class="sidebar-group-label">${menu.label}</div>` +
       items + footer;
   }

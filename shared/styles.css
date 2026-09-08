@@ -82,17 +82,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .navbar-login:hover{background:var(--bg-alt);}
 
 /* ── role switcher (แสดงเมื่อผู้ใช้มีมากกว่า 1 บทบาท) ── */
-.role-switch-wrap{background:#fff;border-bottom:1px solid var(--border);}
-.role-switch{display:flex;gap:3px;padding:5px;flex-wrap:wrap;max-width:1320px;margin:12px auto;background:var(--bg-alt);border:1px solid var(--border-soft);border-radius:100px;width:fit-content;}
-.role-switch a{font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:100px;background:transparent;color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:background .15s,color .15s,box-shadow .15s;}
-.role-switch a:hover{color:var(--text);}
-.role-switch a.active{background:#fff;color:var(--accent-dark);box-shadow:0 2px 6px rgba(20,30,70,.1);}
+/* (role-switch ถูกย้ายเข้าไปอยู่ใน sidebar แล้ว — ใช้ .sidebar-btn + .sidebar-divider ร่วมกับเมนูปกติ) */
 
 /* ── shell / sidebar ── */
 .shell{max-width:1320px;margin:0 auto;display:flex;align-items:flex-start;gap:0;}
 .sidebar{width:250px;flex-shrink:0;background:#fff;border-left:1px solid var(--border);min-height:calc(100vh - 62px);padding:18px 14px;position:sticky;top:62px;display:flex;flex-direction:column;gap:2px;transition:width .18s ease,padding .18s ease;}
 .sidebar-group-label{font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:14px 12px 8px;white-space:nowrap;overflow:hidden;transition:opacity .12s ease;}
 .sidebar-group-label:first-child{padding-top:4px;}
+.sidebar-divider{height:1px;background:var(--border-soft);margin:8px 10px 12px;}
+@media (min-width:901px){.sidebar.collapsed .sidebar-divider{margin-left:0;margin-right:0;}}
 .sidebar-btn{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;color:var(--text2);text-decoration:none;font-weight:700;font-size:13.5px;border:none;background:none;width:100%;text-align:right;cursor:pointer;font-family:inherit;position:relative;transition:background .15s,color .15s,transform .1s;}
 .sidebar-btn i{flex-shrink:0;color:var(--text3);transition:color .15s;}
 .sidebar-btn-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
