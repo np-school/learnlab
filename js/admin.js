@@ -82,6 +82,7 @@ function hasViewPerm(v) {
 }
 
 function loadData() {
+  if (!hasViewPerm('courses')) { renderView(); return; } // ไม่มีสิทธิ์ courses ก็ไม่ต้อง query คอลเลกชันนี้เลย
   db.collection('training_courses').orderBy('createdAt', 'desc').get().then(function(snap) {
     courses = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     renderView();
@@ -120,6 +121,13 @@ function renderView() {
 
 /* ══════════════════════ หน้าแรก (แดชบอร์ดรวม) ══════════════════════ */
 function renderDashboard() {
+  // คนที่ไม่มีสิทธิ์ courses แต่มี users/personnel จะเข้าหน้านี้ได้ (ตามที่ตกลงไว้)
+  // แต่สถิติหลักสูตร/การลงทะเบียนต้องใช้สิทธิ์ courses เท่านั้น จึงโชว์แบบย่อแทนไม่ query เลย
+  if (!hasViewPerm('courses')) {
+    document.getElementById('body').innerHTML =
+      '<div class="panel empty">คุณไม่มีสิทธิ์ดูสถิติหลักสูตร ใช้เมนูด้านซ้ายเพื่อไปยังส่วนงานที่คุณมีสิทธิ์</div>';
+    return;
+  }
   document.getElementById('body').innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
   var ready = allEnrollments ? Promise.resolve(allEnrollments) :
     db.collection('training_enrollments').get().then(function(snap) {
