@@ -11,7 +11,7 @@
 //    (เปิดโฟลเดอร์ใน Drive แล้วคัดลอกส่วนท้ายของ URL หลัง /folders/)
 // =========================================================
 
-const DRIVE_CLIENT_ID = "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";
+const DRIVE_CLIENT_ID = "805430097617-hhqdjiqge4qotuh7mve7fqbsr3m8ujs3.apps.googleusercontent.com";
 const DRIVE_SHARED_FOLDER_ID = "0AMfNDNABh-XBUk9PVA";
 
 // ขอสิทธิ์แบบจำกัดเฉพาะไฟล์ที่แอปนี้สร้าง/เปิดเอง (ไม่แตะไฟล์อื่นใน Drive ของผู้ใช้)
