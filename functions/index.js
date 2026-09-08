@@ -23,7 +23,12 @@ const DRIVE_SHARED_FOLDER_ID = "0AMfNDNABh-XBUk9PVA"; // แก้เป็น�
 const UPLOAD_PREFIX = "pending-uploads/"; // ต้องตรงกับ path ที่ฝั่งเว็บอัปโหลดเข้ามา
 
 exports.uploadToDrive = onObjectFinalized(
-  { region: "us-east1", memory: "512MiB", timeoutSeconds: 300 },
+  {
+    region: "us-east1",
+    memory: "512MiB",
+    timeoutSeconds: 300,
+    serviceAccount: "uploadcourse@np-learnlab-508006.iam.gserviceaccount.com"
+  },
   async (event) => {
     const obj = event.data;
     const filePath = obj.name || "";
