@@ -7,11 +7,20 @@
 var currentUser = null;
 var courses = [];      // training_courses ที่ status == 'published'
 var enrollMap = {};    // courseId -> enrollment doc (+ id)
-var view = 'list';     // 'list' | 'detail'
+var myProfile = null;  // profiles/{email} — ข้อมูลที่จะใช้บนเกียรติบัตร
+var view = 'home';     // 'home' | 'profile' | 'my-trainings' | 'catalog' | 'detail'
+var returnView = 'catalog'; // จำหน้าที่มาก่อนเข้า detail เพื่อกดย้อนกลับถูกที่
 var activeCourseId = null;
 var activeLessonIdx = 0;
 var examAnswers = {};  // qId -> ตัวเลือกที่เลือก
 var examPool = [];     // ชุดคำถามที่ได้จาก Cloud Function (ไม่มีเฉลย)
+
+var PAGE_META = {
+  'home':          ['หน้าแรก', 'ภาพรวมการอบรมและความคืบหน้าของคุณ'],
+  'profile':       ['ข้อมูลส่วนตัว', 'ข้อมูลนี้จะปรากฏบนเกียรติบัตรของคุณ กรุณากรอกให้ถูกต้อง'],
+  'my-trainings':  ['การอบรมของฉัน', 'รายการอบรมที่คุณลงทะเบียน ความคืบหน้า และเกียรติบัตร'],
+  'catalog':       ['หลักสูตรอบรม', 'หลักสูตรอบรมทั้งหมดที่เปิดให้ลงทะเบียนในขณะนี้']
+};
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
   return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
@@ -37,6 +46,7 @@ auth.onAuthStateChanged(function(user) {
   document.getElementById('appShell').style.display = 'flex';
   document.getElementById('userLabel').textContent = user.email;
   checkStaffMenu();
+  trackLogin();
   loadData();
 });
 
@@ -54,14 +64,39 @@ function checkStaffMenu() {
   });
 }
 
+/* บันทึก/อัปเดตข้อมูลผู้ที่ล็อกอินเข้าระบบไว้ที่ app_users/{email}
+   ใช้แสดงในหน้า "รายชื่อผู้ใช้งาน" ฝั่งเจ้าหน้าที่ — เขียนได้แค่เอกสารของตัวเอง (ดู firestore.rules) */
+function trackLogin() {
+  db.collection('app_users').doc(currentUser.email).set({
+    email: currentUser.email,
+    displayName: currentUser.displayName || '',
+    photoURL: currentUser.photoURL || '',
+    lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+    loginCount: firebase.firestore.FieldValue.increment(1)
+  }, { merge: true }).catch(function(err) { console.warn('trackLogin failed:', err.message); });
+}
+
+/* ══════════════════════ นำทางระหว่างหน้า (SPA state) ══════════════════════ */
+function goToView(v) {
+  view = v;
+  activeCourseId = null;
+  document.querySelectorAll('.sidebar-btn[data-view]').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-view') === v);
+  });
+  renderView();
+  if (typeof toggleLabSidebar === 'function') toggleLabSidebar(false);
+}
+
 function loadData() {
   Promise.all([
     db.collection('training_courses').where('status', '==', 'published').get(),
-    db.collection('training_enrollments').where('userEmail', '==', currentUser.email).get()
+    db.collection('training_enrollments').where('userEmail', '==', currentUser.email).get(),
+    db.collection('profiles').doc(currentUser.email).get()
   ]).then(function(results) {
     courses = results[0].docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
     enrollMap = {};
     results[1].docs.forEach(function(d) { var e = Object.assign({ id: d.id }, d.data()); enrollMap[e.courseId] = e; });
+    myProfile = results[2].exists ? results[2].data() : null;
     // โหลดบทเรียนของแต่ละคอร์ส (subcollection) แบบขนาน
     return Promise.all(courses.map(function(c) {
       return db.collection('training_courses').doc(c.id).collection('lessons').orderBy('order').get()
@@ -73,33 +108,142 @@ function loadData() {
 }
 
 function renderView() {
-  document.getElementById('body').innerHTML = view === 'detail' ? renderDetail(activeCourseId) : renderList();
+  var meta = PAGE_META[view] || (view === 'detail' ? [findCourse(activeCourseId) ? findCourse(activeCourseId).title : 'หลักสูตร', 'เรียนเนื้อหาให้ครบตามลำดับ แล้วทำแบบทดสอบเพื่อรับเกียรติบัตร'] : PAGE_META.home);
+  document.getElementById('pageTitle').textContent = meta[0];
+  document.getElementById('pageDesc').textContent = meta[1];
+
+  var html;
+  if (view === 'detail') html = renderDetail(activeCourseId);
+  else if (view === 'profile') html = renderProfile();
+  else if (view === 'my-trainings') html = renderMyTrainings();
+  else if (view === 'catalog') html = renderCatalog();
+  else html = renderHome();
+  document.getElementById('body').innerHTML = html;
   lucide.createIcons();
 }
 
-function renderList() {
-  if (!courses.length) return '<div class="panel empty">ยังไม่มีหลักสูตรที่เปิดอบรมในขณะนี้</div>';
-  var html = '<div class="grid-cards">';
-  courses.forEach(function(c) {
-    var enr = enrollMap[c.id];
-    var tag = !enr ? '<span class="tag tag-wait">ยังไม่ลงทะเบียน</span>'
-      : enr.status === 'passed' ? '<span class="tag tag-pass">ผ่านแล้ว</span>'
-      : enr.status === 'failed' ? '<span class="tag tag-fail">ยังไม่ผ่าน</span>'
-      : '<span class="tag tag-progress">กำลังเรียน</span>';
-    var done = enr ? (enr.completedLessons || []).length : 0;
-    var total = c.lessons.length || 1;
-    html += '<div class="panel course-card">' +
-      '<div style="display:flex;justify-content:space-between;gap:8px;"><h3>' + esc(c.title) + '</h3>' + tag + '</div>' +
-      '<p style="font-size:13px;color:var(--ink-soft);">' + esc(c.desc) + '</p>' +
-      '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round(100 * done / total) + '%"></div></div>' +
-      '<div class="meta">' + c.lessons.length + ' บทเรียน · ผ่านเกณฑ์ ' + c.passScore + '%</div>' +
-      '<button class="btn btn-brass btn-block" onclick="openCourse(\'' + c.id + '\')">' + (enr ? 'เข้าเรียนต่อ' : 'ลงทะเบียนเรียน') + '</button>' +
+/* ══════════════════════ หน้าแรก (แดชบอร์ด) ══════════════════════ */
+function renderHome() {
+  var enrolledCount = Object.keys(enrollMap).length;
+  var passedCount = Object.values(enrollMap).filter(function(e) { return e.status === 'passed'; }).length;
+  var inProgressCount = Object.values(enrollMap).filter(function(e) { return e.status === 'learning'; }).length;
+
+  var stats = '<div class="stat-grid">' +
+    statCard('book-open', courses.length, 'หลักสูตรที่เปิดอบรม') +
+    statCard('graduation-cap', enrolledCount, 'ลงทะเบียนแล้ว') +
+    statCard('loader', inProgressCount, 'กำลังเรียน') +
+    statCard('award', passedCount, 'ผ่านเกณฑ์แล้ว') +
     '</div>';
-  });
-  return html + '</div>';
+
+  var profileBanner = (!myProfile || !myProfile.fullName) ?
+    '<div class="panel" style="border-color:var(--c-amber-tint);background:var(--c-amber-pale);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">' +
+      '<div><b style="font-size:13.5px;">ยังไม่ได้กรอกข้อมูลส่วนตัว</b><p style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">กรอกชื่อ-นามสกุลให้ถูกต้องก่อนสอบผ่าน เพื่อให้ปรากฏบนเกียรติบัตรอย่างถูกต้อง</p></div>' +
+      '<button class="btn btn-brass" onclick="goToView(\'profile\')"><i data-lucide="user" style="width:14px;height:14px;"></i> กรอกข้อมูล</button>' +
+    '</div>' : '';
+
+  var openCourses = courses.slice(0, 4);
+  var listHtml = openCourses.length ? '<div class="grid-cards">' + openCourses.map(courseCardHtml).join('') + '</div>' :
+    '<div class="panel empty">ยังไม่มีหลักสูตรที่เปิดอบรมในขณะนี้</div>';
+
+  return stats + profileBanner +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+      '<h3 style="font-size:15px;">หลักสูตรที่เปิดอบรม</h3>' +
+      (courses.length > 4 ? '<button class="btn btn-outline" onclick="goToView(\'catalog\')">ดูทั้งหมด</button>' : '') +
+    '</div>' + listHtml;
 }
 
-function openCourse(courseId) {
+function statCard(icon, num, label) {
+  return '<div class="panel stat-card"><div class="stat-icon"><i data-lucide="' + icon + '" style="width:19px;height:19px;"></i></div>' +
+    '<div class="stat-num">' + num + '</div><div class="stat-label">' + label + '</div></div>';
+}
+
+/* ══════════════════════ ข้อมูลส่วนตัว ══════════════════════ */
+function renderProfile() {
+  var p = myProfile || {};
+  return '<div class="panel" style="max-width:560px;">' +
+    '<div class="field"><label>คำนำหน้า</label>' +
+      '<select id="pfPrefix">' +
+        ['นาย','นาง','นางสาว','อื่นๆ'].map(function(o) { return '<option' + (p.prefix===o?' selected':'') + '>' + o + '</option>'; }).join('') +
+      '</select></div>' +
+    '<div class="field-row">' +
+      '<div class="field"><label>ชื่อ</label><input id="pfFirst" value="' + esc(p.firstName) + '"></div>' +
+      '<div class="field"><label>นามสกุล</label><input id="pfLast" value="' + esc(p.lastName) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label>ตำแหน่ง/หน่วยงาน (ถ้ามี)</label><input id="pfPosition" value="' + esc(p.position) + '"></div>' +
+    '<p style="font-size:12px;color:var(--ink-soft);margin:-4px 0 14px;">อีเมล: ' + esc(currentUser.email) + ' (ใช้ล็อกอิน แก้ไขไม่ได้)</p>' +
+    '<button class="btn btn-brass" onclick="saveProfile()"><i data-lucide="save" style="width:15px;height:15px;"></i> บันทึกข้อมูล</button>' +
+    '<span id="pfSaved" style="display:none;color:var(--sage);font-size:12.5px;margin-left:10px;">บันทึกแล้ว</span>' +
+  '</div>';
+}
+
+function saveProfile() {
+  var first = document.getElementById('pfFirst').value.trim();
+  var last = document.getElementById('pfLast').value.trim();
+  if (!first || !last) { alert('กรุณากรอกชื่อและนามสกุล'); return; }
+  var data = {
+    prefix: document.getElementById('pfPrefix').value,
+    firstName: first,
+    lastName: last,
+    fullName: document.getElementById('pfPrefix').value + first + ' ' + last,
+    position: document.getElementById('pfPosition').value.trim(),
+    email: currentUser.email,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  db.collection('profiles').doc(currentUser.email).set(data, { merge: true }).then(function() {
+    myProfile = Object.assign({}, myProfile, data);
+    var el = document.getElementById('pfSaved');
+    if (el) { el.style.display = 'inline'; setTimeout(function() { el.style.display = 'none'; }, 2500); }
+  }).catch(function(err) { alert('บันทึกไม่สำเร็จ: ' + err.message); });
+}
+
+/* ══════════════════════ การอบรมของฉัน ══════════════════════ */
+function renderMyTrainings() {
+  var entries = Object.keys(enrollMap).map(function(cid) { return { course: findCourse(cid) || { id: cid, title: '(หลักสูตรถูกลบ/ปิดแล้ว)', lessons: [] }, enr: enrollMap[cid] }; });
+  if (!entries.length) return '<div class="panel empty">ยังไม่ได้ลงทะเบียนอบรมหลักสูตรใด<br><button class="btn btn-brass" style="margin-top:10px;" onclick="goToView(\'catalog\')">ไปที่หลักสูตรอบรม</button></div>';
+
+  var rows = entries.map(function(x) {
+    var c = x.course, enr = x.enr;
+    var tag = enr.status === 'passed' ? '<span class="tag tag-pass">ผ่านแล้ว</span>'
+      : enr.status === 'failed' ? '<span class="tag tag-fail">ยังไม่ผ่าน</span>'
+      : '<span class="tag tag-progress">กำลังเรียน</span>';
+    var done = (enr.completedLessons || []).length;
+    var total = (c.lessons || []).length || 1;
+    return '<tr><td><b>' + esc(c.title) + '</b><br><span style="font-size:11px;color:var(--ink-soft);">' + done + '/' + total + ' บทเรียน</span></td>' +
+      '<td>' + tag + '</td><td>' + (enr.examScore == null ? '-' : enr.examScore + '%') + '</td>' +
+      '<td style="text-align:right;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">' +
+        '<button class="btn btn-outline" onclick="openCourse(\'' + c.id + '\',\'my-trainings\')"><i data-lucide="arrow-right" style="width:13px;height:13px;"></i> เข้าเรียนต่อ</button>' +
+        (enr.status === 'passed' ? '<button class="btn btn-brass" onclick="fetchCertificate(\'' + c.id + '\')"><i data-lucide="download" style="width:13px;height:13px;"></i> เกียรติบัตร</button>' : '') +
+      '</td></tr>';
+  }).join('');
+
+  return '<div class="panel" style="padding:0;overflow-x:auto;"><table><thead><tr><th>หลักสูตร</th><th>สถานะ</th><th>คะแนน</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+/* ══════════════════════ หลักสูตรอบรม (แคตตาล็อกทั้งหมด) ══════════════════════ */
+function renderCatalog() {
+  if (!courses.length) return '<div class="panel empty">ยังไม่มีหลักสูตรที่เปิดอบรมในขณะนี้</div>';
+  return '<div class="grid-cards">' + courses.map(courseCardHtml).join('') + '</div>';
+}
+
+function courseCardHtml(c) {
+  var enr = enrollMap[c.id];
+  var tag = !enr ? '<span class="tag tag-wait">ยังไม่ลงทะเบียน</span>'
+    : enr.status === 'passed' ? '<span class="tag tag-pass">ผ่านแล้ว</span>'
+    : enr.status === 'failed' ? '<span class="tag tag-fail">ยังไม่ผ่าน</span>'
+    : '<span class="tag tag-progress">กำลังเรียน</span>';
+  var done = enr ? (enr.completedLessons || []).length : 0;
+  var total = c.lessons.length || 1;
+  return '<div class="panel course-card">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;"><h3>' + esc(c.title) + '</h3>' + tag + '</div>' +
+    '<p style="font-size:13px;color:var(--ink-soft);">' + esc(c.desc) + '</p>' +
+    '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round(100 * done / total) + '%"></div></div>' +
+    '<div class="meta">' + c.lessons.length + ' บทเรียน · ผ่านเกณฑ์ ' + c.passScore + '%</div>' +
+    '<button class="btn btn-brass btn-block" onclick="openCourse(\'' + c.id + '\',\'catalog\')">' + (enr ? 'เข้าเรียนต่อ' : 'ลงทะเบียนเรียน') + '</button>' +
+  '</div>';
+}
+
+function openCourse(courseId, from) {
+  returnView = from || 'catalog';
   var enr = enrollMap[courseId];
   var go = function() { activeCourseId = courseId; activeLessonIdx = 0; view = 'detail'; renderView(); };
   if (enr) { go(); return; }
@@ -110,7 +254,7 @@ function openCourse(courseId) {
   });
 }
 
-function backToList() { view = 'list'; activeCourseId = null; renderView(); }
+function backToList() { goToView(returnView); }
 
 function findCourse(id) { return courses.filter(function(c) { return c.id === id; })[0]; }
 
@@ -162,7 +306,7 @@ function renderDetail(courseId) {
 }
 
 function backBtn() {
-  return '<button class="btn btn-outline" style="margin-bottom:14px;" onclick="backToList()"><i data-lucide="arrow-left" style="width:15px;height:15px;"></i> กลับไปหน้ารายการหลักสูตร</button>';
+  return '<button class="btn btn-outline" style="margin-bottom:14px;" onclick="backToList()"><i data-lucide="arrow-left" style="width:15px;height:15px;"></i> กลับ</button>';
 }
 
 function markComplete(lessonId) {
@@ -250,7 +394,7 @@ function fetchCertificate(courseId) {
           window.open(snap.docs[0].data().pdfUrl, '_blank');
         } else if (tries > 8) {
           clearInterval(poll);
-          showAlert('เกียรติบัตรกำลังเตรียมอยู่ ลองกดดูใหม่อีกครั้งในหน้ารายการหลักสูตร');
+          showAlert('เกียรติบัตรกำลังเตรียมอยู่ ลองกดดูใหม่อีกครั้งในหน้า "การอบรมของฉัน"');
         }
       });
   }, 1500);

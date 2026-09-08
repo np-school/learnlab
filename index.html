@@ -47,7 +47,16 @@
     <div class="sidebar-wrap" id="labSidebar">
       <div class="sidebar-inner">
         <div class="sec-label">เมนูหลัก</div>
-        <a class="sidebar-btn active" href="#">
+        <a class="sidebar-btn active" href="#" data-view="home" onclick="goToView('home');return false;">
+          <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i><span>หน้าแรก</span>
+        </a>
+        <a class="sidebar-btn" href="#" data-view="profile" onclick="goToView('profile');return false;">
+          <i data-lucide="user" style="width:16px;height:16px;"></i><span>ข้อมูลส่วนตัว</span>
+        </a>
+        <a class="sidebar-btn" href="#" data-view="my-trainings" onclick="goToView('my-trainings');return false;">
+          <i data-lucide="graduation-cap" style="width:16px;height:16px;"></i><span>การอบรมของฉัน</span>
+        </a>
+        <a class="sidebar-btn" href="#" data-view="catalog" onclick="goToView('catalog');return false;">
           <i data-lucide="book-open" style="width:16px;height:16px;"></i><span>หลักสูตรอบรม</span>
         </a>
         <a class="sidebar-btn" href="verify.html" target="_blank">
@@ -64,8 +73,8 @@
     <div id="labSidebarOverlay" class="sidebar-overlay-lab" onclick="toggleLabSidebar(false)"></div>
     <main class="lab-main">
       <div class="page-head">
-        <h1>หลักสูตรอบรมออนไลน์</h1>
-        <p>เรียนเนื้อหาให้ครบตามลำดับ แล้วทำแบบทดสอบเพื่อรับเกียรติบัตร</p>
+        <h1 id="pageTitle">หน้าแรก</h1>
+        <p id="pageDesc">ภาพรวมการอบรมและความคืบหน้าของคุณ</p>
       </div>
       <div id="body"></div>
     </main>

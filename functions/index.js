@@ -101,6 +101,11 @@ exports.onEnrollmentPassed = functions.region('asia-southeast1').firestore
     const courseSnap = await db.collection('training_courses').doc(after.courseId).get();
     const course = courseSnap.data();
 
+    // ใช้ชื่อจากหน้า "ข้อมูลส่วนตัว" (profiles/{email}.fullName) ถ้าผู้เรียนกรอกไว้แล้ว
+    // เพราะเป็นชื่อที่ตั้งใจให้ปรากฏบนเกียรติบัตร แม่นยำกว่าชื่อบัญชี Google (displayName)
+    const profileSnap = await db.collection('profiles').doc(after.userEmail).get();
+    const certUserName = (profileSnap.exists && profileSnap.data().fullName) ? profileSnap.data().fullName : after.userName;
+
     // เลขที่เกียรติบัตร: NPL-{พ.ศ.}-{running number} — ใช้ transaction กันเลขชนกัน
     const yearBE = new Date().getFullYear() + 543;
     const counterRef = db.collection('training_counters').doc(String(yearBE));

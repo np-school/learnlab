@@ -12,6 +12,18 @@ var activeTab = 'general';
 var editLessonId = null;
 var editQuestionId = null;
 
+var adminView = 'dashboard'; // 'dashboard' | 'courses' | 'users' | 'personnel'
+var allEnrollments = null;   // แคชไว้ใช้คำนวณแดชบอร์ด (โหลดครั้งแรกที่เข้าหน้าแรก)
+var appUsers = null;         // แคช app_users (โหลดเมื่อเข้าแท็บ "รายชื่อผู้ใช้งาน")
+var personnel = null;        // แคช personnel (โหลดเมื่อเข้าแท็บ "รายชื่อบุคลากร")
+
+var ADMIN_PAGE_META = {
+  dashboard:  ['หน้าแรก', 'ภาพรวมการอบรมทั้งหมด ผู้ลงทะเบียน และความคืบหน้า'],
+  courses:    ['จัดการอบรมออนไลน์', 'สร้างหลักสูตร เพิ่มเนื้อหา ข้อสอบ และติดตามผู้เรียน'],
+  users:      ['รายชื่อผู้ใช้งาน', 'บุคคลทั่วไปที่เคยล็อกอินเข้าใช้งานระบบ'],
+  personnel:  ['รายชื่อบุคลากร', 'ข้อมูลบุคลากรที่นำเข้าโดยเจ้าหน้าที่']
+};
+
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
   return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
 }); }
@@ -53,11 +65,231 @@ function loadData() {
   });
 }
 
+/* ══════════════════════ นำทางระหว่างหน้า (SPA state) ══════════════════════ */
+function goToAdminView(v) {
+  adminView = v;
+  document.querySelectorAll('.sidebar-btn[data-view]').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-view') === v);
+  });
+  renderView();
+  if (typeof toggleLabSidebar === 'function') toggleLabSidebar(false);
+}
+
 function renderView() {
+  var meta = ADMIN_PAGE_META[adminView] || ADMIN_PAGE_META.dashboard;
+  document.getElementById('pageTitle').textContent = meta[0];
+  document.getElementById('pageDesc').textContent = meta[1];
+  document.getElementById('btnNewCourse').style.display = adminView === 'courses' ? 'inline-flex' : 'none';
+  document.getElementById('btnUploadPersonnel').style.display = adminView === 'personnel' ? 'inline-flex' : 'none';
+
+  if (adminView === 'dashboard') { renderDashboard(); return; }
+  if (adminView === 'users') { renderUsers(); return; }
+  if (adminView === 'personnel') { renderPersonnel(); return; }
   document.getElementById('body').innerHTML = renderTable();
   lucide.createIcons();
 }
 
+/* ══════════════════════ หน้าแรก (แดชบอร์ดรวม) ══════════════════════ */
+function renderDashboard() {
+  document.getElementById('body').innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
+  var ready = allEnrollments ? Promise.resolve(allEnrollments) :
+    db.collection('training_enrollments').get().then(function(snap) {
+      allEnrollments = snap.docs.map(function(d) { return d.data(); });
+      return allEnrollments;
+    });
+  ready.then(function(enrolls) {
+    if (adminView !== 'dashboard') return; // ผู้ใช้สลับหน้าไปแล้วระหว่างรอโหลด
+    var byCourse = {};
+    enrolls.forEach(function(e) {
+      if (!byCourse[e.courseId]) byCourse[e.courseId] = { enrolled: 0, learning: 0, passed: 0, failed: 0 };
+      byCourse[e.courseId].enrolled++;
+      byCourse[e.courseId][e.status === 'passed' ? 'passed' : e.status === 'failed' ? 'failed' : 'learning']++;
+    });
+    var totalEnrolled = enrolls.length;
+    var totalPassed = enrolls.filter(function(e) { return e.status === 'passed'; }).length;
+    var published = courses.filter(function(c) { return c.status === 'published'; }).length;
+
+    var stats = '<div class="stat-grid">' +
+      statCard('layers', courses.length, 'หลักสูตรทั้งหมด') +
+      statCard('radio', published, 'เปิดรับสมัครอยู่') +
+      statCard('users', totalEnrolled, 'ผู้ลงทะเบียนรวม') +
+      statCard('award', totalPassed, 'ผ่านเกณฑ์รวม') +
+      '</div>';
+
+    var rows = courses.length ? courses.map(function(c) {
+      var s = byCourse[c.id] || { enrolled: 0, learning: 0, passed: 0, failed: 0 };
+      var pct = s.enrolled ? Math.round(100 * s.passed / s.enrolled) : 0;
+      var statusTag = { draft: '<span class="tag tag-wait">ฉบับร่าง</span>', published: '<span class="tag tag-pass">เผยแพร่แล้ว</span>', closed: '<span class="tag tag-fail">ปิดรับสมัคร</span>' };
+      return '<tr><td><b>' + esc(c.title) + '</b><br>' + (statusTag[c.status] || '') + '</td>' +
+        '<td>' + s.enrolled + ' คน</td><td>' + s.learning + ' คน</td><td>' + s.passed + ' คน</td><td>' + s.failed + ' คน</td>' +
+        '<td style="min-width:110px;"><div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div><span style="font-size:11px;color:var(--ink-soft);">' + pct + '% ผ่าน</span></td>' +
+        '<td style="text-align:right;"><button class="btn btn-outline" onclick="goToAdminView(\'courses\');setTimeout(function(){openCourseModal(\'' + c.id + '\');},0)"><i data-lucide="arrow-right" style="width:13px;height:13px;"></i></button></td></tr>';
+    }).join('') : '';
+
+    var table = courses.length ?
+      '<div class="panel" style="padding:0;overflow-x:auto;"><table><thead><tr><th>หลักสูตร</th><th>ลงทะเบียน</th><th>กำลังเรียน</th><th>ผ่าน</th><th>ไม่ผ่าน</th><th>อัตราผ่าน</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+      : '<div class="panel empty">ยังไม่มีหลักสูตร ไปที่เมนู "หลักสูตรอบรม" เพื่อสร้างหลักสูตรแรก</div>';
+
+    document.getElementById('body').innerHTML = stats + table;
+    lucide.createIcons();
+  }).catch(function(err) {
+    document.getElementById('body').innerHTML = '<div class="panel empty">โหลดข้อมูลไม่สำเร็จ: ' + esc(err.message) + '</div>';
+  });
+}
+
+function statCard(icon, num, label) {
+  return '<div class="panel stat-card"><div class="stat-icon"><i data-lucide="' + icon + '" style="width:19px;height:19px;"></i></div>' +
+    '<div class="stat-num">' + num + '</div><div class="stat-label">' + label + '</div></div>';
+}
+
+/* ══════════════════════ รายชื่อผู้ใช้งาน (บุคคลทั่วไปที่ล็อกอิน) ══════════════════════ */
+function renderUsers() {
+  document.getElementById('body').innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
+  var ready = appUsers ? Promise.resolve(appUsers) :
+    db.collection('app_users').orderBy('lastLoginAt', 'desc').get().then(function(snap) {
+      appUsers = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      return appUsers;
+    });
+  ready.then(function(list) {
+    if (adminView !== 'users') return;
+    if (!list.length) { document.getElementById('body').innerHTML = '<div class="panel empty">ยังไม่มีผู้ใช้งานล็อกอินเข้าระบบ</div>'; return; }
+    var rows = list.map(function(u) {
+      var last = u.lastLoginAt && u.lastLoginAt.toDate ? u.lastLoginAt.toDate().toLocaleString('th-TH') : '-';
+      return '<tr><td><b>' + esc(u.displayName || '-') + '</b><br><span style="font-size:11px;color:var(--ink-soft);">' + esc(u.email) + '</span></td>' +
+        '<td>' + (u.loginCount || 1) + ' ครั้ง</td><td>' + last + '</td></tr>';
+    }).join('');
+    document.getElementById('body').innerHTML =
+      '<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">รายชื่อทุกบัญชี @nongki.ac.th ที่เคยล็อกอินเข้าหน้าสมาชิก ทั้งหมด ' + list.length + ' คน</p>' +
+      '<div class="panel" style="padding:0;overflow-x:auto;"><table><thead><tr><th>ชื่อ / อีเมล</th><th>จำนวนครั้งที่ล็อกอิน</th><th>ล็อกอินล่าสุด</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    lucide.createIcons();
+  }).catch(function(err) {
+    document.getElementById('body').innerHTML = '<div class="panel empty">โหลดข้อมูลไม่สำเร็จ: ' + esc(err.message) + '</div>';
+  });
+}
+
+/* ══════════════════════ รายชื่อบุคลากร (นำเข้าโดยเจ้าหน้าที่) ══════════════════════ */
+function renderPersonnel() {
+  document.getElementById('body').innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
+  var ready = personnel ? Promise.resolve(personnel) :
+    db.collection('personnel').orderBy('fullName').get().then(function(snap) {
+      personnel = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      return personnel;
+    });
+  ready.then(function(list) {
+    if (adminView !== 'personnel') return;
+    var uploadHint = '<div class="upload-box">' +
+      'อัพโหลดไฟล์ CSV รายชื่อบุคลากร (คอลัมน์: <code>employeeId,fullName,position,department,email</code>) กดปุ่ม "อัพโหลดรายชื่อ (CSV)" มุมขวาบน หรือเพิ่มทีละคนด้านล่าง<br>' +
+      '<button class="btn btn-outline" style="margin-top:8px;" onclick="openPersonnelModal(null)"><i data-lucide="user-plus" style="width:13px;height:13px;"></i> เพิ่มบุคลากรทีละคน</button>' +
+    '</div>';
+    if (!list.length) { document.getElementById('body').innerHTML = uploadHint + '<div class="panel empty">ยังไม่มีข้อมูลบุคลากรในระบบ</div>'; lucide.createIcons(); return; }
+    var rows = list.map(function(p) {
+      return '<tr><td><b>' + esc(p.fullName) + '</b><br><span style="font-size:11px;color:var(--ink-soft);">' + esc(p.employeeId || '-') + '</span></td>' +
+        '<td>' + esc(p.position || '-') + '</td><td>' + esc(p.department || '-') + '</td><td>' + esc(p.email || '-') + '</td>' +
+        '<td style="text-align:right;display:flex;gap:5px;justify-content:flex-end;">' +
+          '<button class="btn btn-outline" onclick="openPersonnelModal(\'' + p.id + '\')"><i data-lucide="edit" style="width:13px;height:13px;"></i></button>' +
+          '<button class="btn btn-outline" onclick="deletePersonnel(\'' + p.id + '\')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>' +
+        '</td></tr>';
+    }).join('');
+    document.getElementById('body').innerHTML = uploadHint +
+      '<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">ทั้งหมด ' + list.length + ' คน</p>' +
+      '<div class="panel" style="padding:0;overflow-x:auto;"><table><thead><tr><th>ชื่อ-สกุล / รหัส</th><th>ตำแหน่ง</th><th>หน่วยงาน</th><th>อีเมล</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    lucide.createIcons();
+  }).catch(function(err) {
+    document.getElementById('body').innerHTML = '<div class="panel empty">โหลดข้อมูลไม่สำเร็จ: ' + esc(err.message) + '</div>';
+  });
+}
+
+function openPersonnelModal(id) {
+  var p = id ? (personnel || []).filter(function(x) { return x.id === id; })[0] : { employeeId: '', fullName: '', position: '', department: '', email: '' };
+  document.getElementById('personnelModalBody').innerHTML =
+    '<div class="modal-head"><div><h3>' + (id ? 'แก้ไขข้อมูลบุคลากร' : 'เพิ่มบุคลากร') + '</h3></div><button class="modal-close" onclick="closePersonnelModal()">&times;</button></div>' +
+    '<div class="field"><label>รหัสประจำตัว</label><input id="pnId" value="' + esc(p.employeeId) + '"' + (id ? ' disabled' : '') + '></div>' +
+    '<div class="field"><label>ชื่อ-นามสกุล</label><input id="pnName" value="' + esc(p.fullName) + '"></div>' +
+    '<div class="field-row">' +
+      '<div class="field"><label>ตำแหน่ง</label><input id="pnPosition" value="' + esc(p.position) + '"></div>' +
+      '<div class="field"><label>หน่วยงาน</label><input id="pnDept" value="' + esc(p.department) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label>อีเมล (ถ้ามี)</label><input id="pnEmail" value="' + esc(p.email) + '"></div>' +
+    '<button class="btn btn-brass" onclick="savePersonnel(\'' + (id || '') + '\')"><i data-lucide="save" style="width:15px;height:15px;"></i> บันทึก</button>';
+  document.getElementById('personnelModal').classList.add('open'); lucide.createIcons();
+}
+function closePersonnelModal() { document.getElementById('personnelModal').classList.remove('open'); }
+
+function savePersonnel(id) {
+  var empId = id || document.getElementById('pnId').value.trim();
+  var name = document.getElementById('pnName').value.trim();
+  if (!empId || !name) { alert('กรุณากรอกรหัสประจำตัวและชื่อ-นามสกุล'); return; }
+  var data = {
+    employeeId: empId,
+    fullName: name,
+    position: document.getElementById('pnPosition').value.trim(),
+    department: document.getElementById('pnDept').value.trim(),
+    email: document.getElementById('pnEmail').value.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: currentUser.email
+  };
+  db.collection('personnel').doc(empId).set(data, { merge: true }).then(function() {
+    personnel = null; // บังคับโหลดใหม่
+    closePersonnelModal(); renderPersonnel();
+  }).catch(function(err) { alert('บันทึกไม่สำเร็จ: ' + err.message); });
+}
+
+function deletePersonnel(id) {
+  if (!confirm('ลบข้อมูลบุคลากรคนนี้ใช่หรือไม่?')) return;
+  db.collection('personnel').doc(id).delete().then(function() {
+    personnel = (personnel || []).filter(function(p) { return p.id !== id; });
+    renderPersonnel();
+  }).catch(function(err) { alert('ลบไม่สำเร็จ: ' + err.message); });
+}
+
+/* อัพโหลดไฟล์ CSV รายชื่อบุคลากรแบบกลุ่ม (คอลัมน์: employeeId,fullName,position,department,email) */
+function handlePersonnelCSV(fileInput) {
+  var file = fileInput.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var lines = String(e.target.result).split(/\r?\n/).filter(function(l) { return l.trim(); });
+    if (lines.length < 2) { alert('ไฟล์ว่างเปล่าหรือไม่มีข้อมูล'); fileInput.value = ''; return; }
+    var header = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); });
+    var idx = {
+      id: header.indexOf('employeeid'), name: header.indexOf('fullname'),
+      position: header.indexOf('position'), dept: header.indexOf('department'), email: header.indexOf('email')
+    };
+    if (idx.id === -1 || idx.name === -1) { alert('ไฟล์ CSV ต้องมีคอลัมน์ employeeId และ fullName อย่างน้อย'); fileInput.value = ''; return; }
+    var rows = lines.slice(1).map(function(l) { return l.split(','); }).filter(function(cols) { return (cols[idx.id] || '').trim(); });
+    if (!rows.length) { alert('ไม่พบแถวข้อมูลที่ใช้ได้'); fileInput.value = ''; return; }
+
+    var chunkSize = 400, chunks = [];
+    for (var i = 0; i < rows.length; i += chunkSize) chunks.push(rows.slice(i, i + chunkSize));
+    var chain = Promise.resolve();
+    chunks.forEach(function(chunk) {
+      chain = chain.then(function() {
+        var batch = db.batch();
+        chunk.forEach(function(cols) {
+          var empId = cols[idx.id].trim();
+          var ref = db.collection('personnel').doc(empId);
+          batch.set(ref, {
+            employeeId: empId,
+            fullName: (cols[idx.name] || '').trim(),
+            position: idx.position > -1 ? (cols[idx.position] || '').trim() : '',
+            department: idx.dept > -1 ? (cols[idx.dept] || '').trim() : '',
+            email: idx.email > -1 ? (cols[idx.email] || '').trim() : '',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy: currentUser.email
+          }, { merge: true });
+        });
+        return batch.commit();
+      });
+    });
+    chain.then(function() {
+      alert('อัพโหลดสำเร็จ ' + rows.length + ' รายการ');
+      personnel = null; fileInput.value = ''; renderPersonnel();
+    }).catch(function(err) { alert('อัพโหลดไม่สำเร็จ: ' + err.message); fileInput.value = ''; });
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+/* ══════════════════════ จัดการหลักสูตร (เดิม) ══════════════════════ */
 function renderTable() {
   if (!courses.length) return '<div class="panel empty">ยังไม่มีหลักสูตร กด "สร้างหลักสูตรใหม่" เพื่อเริ่มต้น</div>';
   var statusTag = { draft: '<span class="tag tag-wait">ฉบับร่าง</span>', published: '<span class="tag tag-pass">เผยแพร่แล้ว</span>', closed: '<span class="tag tag-fail">ปิดรับสมัคร</span>' };
