@@ -26,8 +26,10 @@ exports.uploadToDrive = onObjectFinalized(
   {
     region: "us-east1",
     memory: "512MiB",
-    timeoutSeconds: 300,
-    serviceAccount: "uploadcourse@np-learnlab-508006.iam.gserviceaccount.com"
+    timeoutSeconds: 300
+    // ใช้ default compute service account ของโปรเจกต์ (ไม่ต้องขอสิทธิ์ actAs เพิ่ม)
+    // ต้องเพิ่มอีเมล 111321772789-compute@developer.gserviceaccount.com
+    // เป็นสมาชิก Shared Drive แทน uploadcourse@...
   },
   async (event) => {
     const obj = event.data;
