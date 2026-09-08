@@ -1,0 +1,417 @@
+[debug] [2026-09-08T07:16:15.055Z] ----------------------------------------------------------------------
+[debug] [2026-09-08T07:16:15.060Z] Command:       /usr/local/bin/node /Users/lekthehero/.npm-global/bin/firebase deploy --only functions,firestore:rules,storage --project np-learnlab
+[debug] [2026-09-08T07:16:15.060Z] CLI Version:   15.29.0
+[debug] [2026-09-08T07:16:15.060Z] Platform:      darwin
+[debug] [2026-09-08T07:16:15.060Z] Node Version:  v24.18.0
+[debug] [2026-09-08T07:16:15.060Z] Detected Agent: unknown
+[debug] [2026-09-08T07:16:15.060Z] Time:          Tue Sep 08 2026 14:16:15 GMT+0700 (Indochina Time)
+[debug] [2026-09-08T07:16:15.060Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-08T07:16:15.983Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-08T07:16:15.983Z] > authorizing via signed-in user (nattapol@nongki.ac.th)
+[debug] [2026-09-08T07:16:15.983Z] [iam] checking project np-learnlab for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-09-08T07:16:15.995Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:15.995Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:15.996Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions [none]
+[debug] [2026-09-08T07:16:15.996Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions  x-goog-user-project=np-learnlab
+[debug] [2026-09-08T07:16:15.996Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-09-08T07:16:17.273Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions 200
+[debug] [2026-09-08T07:16:17.273Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-09-08T07:16:17.274Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:17.274Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:17.274Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/np-learnlab/serviceAccounts/np-learnlab@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-09-08T07:16:17.274Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/np-learnlab/serviceAccounts/np-learnlab@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-09-08T07:16:18.731Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/np-learnlab/serviceAccounts/np-learnlab@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-09-08T07:16:18.732Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/np-learnlab/serviceAccounts/np-learnlab@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'np-learnlab'...
+[info] 
+[info] i  deploying storage, firestore, functions 
+[info] i  storage: ensuring required API firebasestorage.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:18.736Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:18.736Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:18.736Z] >>> [apiv2][query] GET https://firebasestorage.googleapis.com/v1alpha/projects/np-learnlab/defaultBucket [none]
+[debug] [2026-09-08T07:16:19.474Z] <<< [apiv2][status] GET https://firebasestorage.googleapis.com/v1alpha/projects/np-learnlab/defaultBucket 200
+[debug] [2026-09-08T07:16:19.474Z] <<< [apiv2][body] GET https://firebasestorage.googleapis.com/v1alpha/projects/np-learnlab/defaultBucket {"name":"projects/np-learnlab/defaultBucket","location":"US-EAST1","bucket":{"name":"projects/np-learnlab/buckets/np-learnlab.firebasestorage.app"},"storageClass":"REGIONAL"}
+[info] i  firebase.storage: checking storage.rules for compilation errors... 
+[debug] [2026-09-08T07:16:19.477Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:19.477Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:19.477Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test [none]
+[debug] [2026-09-08T07:16:19.477Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test [omitted]
+[debug] [2026-09-08T07:16:19.867Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test 200
+[debug] [2026-09-08T07:16:19.867Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test {}
+[info] ✔  firebase.storage: rules file storage.rules compiled successfully 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:19.870Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:19.870Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:19.870Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/np-learnlab/databases/(default) [none]
+[debug] [2026-09-08T07:16:21.497Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/np-learnlab/databases/(default) 200
+[debug] [2026-09-08T07:16:21.497Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/np-learnlab/databases/(default) {"name":"projects/np-learnlab/databases/(default)","uid":"4ff57825-b3b9-461d-9b28-9e245aac1645","createTime":"2026-09-07T07:26:50.961555Z","updateTime":"2026-09-07T07:26:50.961555Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-09-08T06:16:21.273791Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","enhancedTextSearchQueryMode":"ENHANCED_QUERY_MODE_ENABLED","etag":"IPeK6pe43pYDMOPs0Zv725YD"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-09-08T07:16:21.499Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:21.499Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:21.499Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test [none]
+[debug] [2026-09-08T07:16:21.499Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test [omitted]
+[debug] [2026-09-08T07:16:23.006Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test 200
+[debug] [2026-09-08T07:16:23.007Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-09-08T07:16:23.010Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:23.010Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:23.010Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab [none]
+[debug] [2026-09-08T07:16:24.618Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab 200
+[debug] [2026-09-08T07:16:24.619Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab {"projectNumber":"111321772789","projectId":"np-learnlab","lifecycleState":"ACTIVE","name":"NP-LearnLab","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-09-07T06:48:48.175Z","parent":{"type":"organization","id":"932573232095"}}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:24.623Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:24.623Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:24.623Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/np-learnlab/adminSdkConfig [none]
+[debug] [2026-09-08T07:16:26.154Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/np-learnlab/adminSdkConfig 200
+[debug] [2026-09-08T07:16:26.155Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/np-learnlab/adminSdkConfig {"projectId":"np-learnlab","storageBucket":"np-learnlab.firebasestorage.app"}
+[debug] [2026-09-08T07:16:26.156Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:26.156Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:26.156Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/np-learnlab/configs [none]
+[debug] [2026-09-08T07:16:26.595Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/np-learnlab/configs 200
+[debug] [2026-09-08T07:16:26.596Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/np-learnlab/configs {}
+[debug] [2026-09-08T07:16:26.600Z] Validating nodejs source
+[warn] ⚠  functions: Runtime Node.js 20 was deprecated on 2026-04-30 and will be decommissioned on 2026-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-09-08T07:16:27.124Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "NP-LearnLab Cloud Functions — อัปโหลดไฟล์ขึ้น Google Drive ฝั่งเซิร์ฟเวอร์",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1",
+    "googleapis": "^140.0.1"
+  },
+  "private": true
+}
+[debug] [2026-09-08T07:16:27.124Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-09-08T07:16:27.125Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-09-08T07:16:27.129Z] Found firebase-functions binary at '/Users/lekthehero/Documents/GitHub/learnlab/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8542
+
+[debug] [2026-09-08T07:16:27.956Z] Got response from /__/functions.yaml {"endpoints":{"uploadToDrive":{"platform":"gcfv2","availableMemoryMb":512,"timeoutSeconds":300,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"region":["us-east1"],"labels":{},"eventTrigger":{"eventType":"google.cloud.storage.object.v1.finalized","eventFilters":{"bucket":"np-learnlab.firebasestorage.app"},"retry":false},"entryPoint":"uploadToDrive"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2026-09-08T07:16:30.995Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:30.996Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:30.996Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/np-learnlab/locations/-/functions [none]
+[debug] [2026-09-08T07:16:32.164Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/np-learnlab/locations/-/functions 200
+[debug] [2026-09-08T07:16:32.164Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/np-learnlab/locations/-/functions {}
+[debug] [2026-09-08T07:16:32.165Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:32.165Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:32.165Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-09-08T07:16:34.038Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/-/functions 200
+[debug] [2026-09-08T07:16:34.039Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/-/functions {}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:34.042Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-08T07:16:34.042Z] > authorizing via signed-in user (nattapol@nongki.ac.th)
+[debug] [2026-09-08T07:16:34.042Z] [iam] checking project np-learnlab for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-09-08T07:16:34.042Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:34.042Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:34.042Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions [none]
+[debug] [2026-09-08T07:16:34.043Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions  x-goog-user-project=np-learnlab
+[debug] [2026-09-08T07:16:34.043Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-09-08T07:16:35.271Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions 200
+[debug] [2026-09-08T07:16:35.271Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/np-learnlab:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-09-08T07:16:35.272Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:35.272Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:35.272Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/np-learnlab/instances pageSize=100&pageToken=
+[debug] [2026-09-08T07:16:36.829Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/np-learnlab/instances 200
+[debug] [2026-09-08T07:16:36.830Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/np-learnlab/instances {}
+[debug] [2026-09-08T07:16:36.831Z] Attempting to merge .env secret bindings {} into declared secrets...)}
+[debug] [2026-09-08T07:16:36.831Z] uploadToDrive declared secrets: undefined
+[info] i  functions: preparing functions directory for uploading... 
+[info] i  functions: packaged /Users/lekthehero/Documents/GitHub/learnlab/functions (33.2 KB) for uploading 
+[debug] [2026-09-08T07:16:36.861Z] Looking up bucket region for the storage event trigger
+[debug] [2026-09-08T07:16:36.861Z] Looking up bucket region for the storage event trigger on bucket np-learnlab.firebasestorage.app
+[debug] [2026-09-08T07:16:36.861Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:36.861Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:36.861Z] >>> [apiv2][query] GET https://storage.googleapis.com/storage/v1/b/np-learnlab.firebasestorage.app [none]
+[debug] [2026-09-08T07:16:38.092Z] <<< [apiv2][status] GET https://storage.googleapis.com/storage/v1/b/np-learnlab.firebasestorage.app 200
+[debug] [2026-09-08T07:16:38.092Z] <<< [apiv2][body] GET https://storage.googleapis.com/storage/v1/b/np-learnlab.firebasestorage.app {"kind":"storage#bucket","selfLink":"https://www.googleapis.com/storage/v1/b/np-learnlab.firebasestorage.app","id":"np-learnlab.firebasestorage.app","name":"np-learnlab.firebasestorage.app","projectNumber":"111321772789","generation":"1788851573111196385","metageneration":"1","location":"US-EAST1","storageClass":"REGIONAL","etag":"CAE=","timeCreated":"2026-09-08T07:12:53.252Z","updated":"2026-09-08T07:12:53.252Z","softDeletePolicy":{"retentionDurationSeconds":"604800","effectiveTime":"2026-09-08T07:12:53.252Z"},"iamConfiguration":{"bucketPolicyOnly":{"enabled":false},"uniformBucketLevelAccess":{"enabled":false},"publicAccessPrevention":"inherited"},"locationType":"region","satisfiesPZI":true}
+[debug] [2026-09-08T07:16:38.092Z] Setting the event trigger region to us-east1 .
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:38.096Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:38.096Z] Checked if tokens are valid: true, expires at: 1788855012265
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:38.096Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:38.096Z] Checked if tokens are valid: true, expires at: 1788855012265
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:38.097Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:38.097Z] Checked if tokens are valid: true, expires at: 1788855012265
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[debug] [2026-09-08T07:16:38.097Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:38.097Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:38.097Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com [none]
+[debug] [2026-09-08T07:16:38.097Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:38.098Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com [none]
+[debug] [2026-09-08T07:16:38.098Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:38.099Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/pubsub.googleapis.com [none]
+[debug] [2026-09-08T07:16:38.100Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/pubsub.googleapis.com  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:38.101Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/storage.googleapis.com [none]
+[debug] [2026-09-08T07:16:38.101Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/storage.googleapis.com  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:38.583Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/storage.googleapis.com 200
+[debug] [2026-09-08T07:16:38.583Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/storage.googleapis.com [omitted]
+[info] ✔  functions: required API storage.googleapis.com is enabled 
+[debug] [2026-09-08T07:16:39.720Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com 200
+[debug] [2026-09-08T07:16:39.720Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com [omitted]
+[warn] ⚠  functions: missing required API eventarc.googleapis.com. Enabling now... 
+[debug] [2026-09-08T07:16:39.721Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:39.721Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:39.721Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com:enable [none]
+[debug] [2026-09-08T07:16:39.721Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com:enable  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:39.725Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com 200
+[debug] [2026-09-08T07:16:39.725Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com [omitted]
+[warn] ⚠  functions: missing required API run.googleapis.com. Enabling now... 
+[debug] [2026-09-08T07:16:39.726Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:39.726Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:39.726Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com:enable [none]
+[debug] [2026-09-08T07:16:39.726Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com:enable  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:39.728Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/pubsub.googleapis.com 200
+[debug] [2026-09-08T07:16:39.728Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/111321772789/services/pubsub.googleapis.com [omitted]
+[info] ✔  functions: required API pubsub.googleapis.com is enabled 
+[debug] [2026-09-08T07:16:41.363Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com:enable 200
+[debug] [2026-09-08T07:16:41.363Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/eventarc.googleapis.com:enable [omitted]
+[debug] [2026-09-08T07:16:41.437Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com:enable 200
+[debug] [2026-09-08T07:16:41.437Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/111321772789/services/run.googleapis.com:enable [omitted]
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2026-09-08T07:16:51.447Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:51.447Z] Checked if tokens are valid: true, expires at: 1788855012265
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2026-09-08T07:16:51.448Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:51.448Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/pubsub.googleapis.com:generateServiceIdentity  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/pubsub.googleapis.com:generateServiceIdentity {}
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/eventarc.googleapis.com:generateServiceIdentity  x-goog-user-project=111321772789
+[debug] [2026-09-08T07:16:51.448Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/eventarc.googleapis.com:generateServiceIdentity {}
+[debug] [2026-09-08T07:16:52.269Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2026-09-08T07:16:52.269Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-111321772789@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"117710827741146750802"}}
+[debug] [2026-09-08T07:16:53.392Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2026-09-08T07:16:53.392Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/111321772789/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-111321772789@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"118107707016021106644"}}
+[debug] [2026-09-08T07:16:53.395Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:53.395Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:53.396Z] >>> [apiv2][query] GET https://storage.googleapis.com/storage/v1/projects/111321772789/serviceAccount [none]
+[debug] [2026-09-08T07:16:54.493Z] <<< [apiv2][status] GET https://storage.googleapis.com/storage/v1/projects/111321772789/serviceAccount 200
+[debug] [2026-09-08T07:16:54.494Z] <<< [apiv2][body] GET https://storage.googleapis.com/storage/v1/projects/111321772789/serviceAccount {"kind":"storage#serviceAccount","email_address":"service-111321772789@gs-project-accounts.iam.gserviceaccount.com"}
+[debug] [2026-09-08T07:16:54.495Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:54.495Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:54.495Z] >>> [apiv2][query] GET https://compute.googleapis.com/compute/v1/projects/111321772789 [none]
+[debug] [2026-09-08T07:16:54.980Z] <<< [apiv2][status] GET https://compute.googleapis.com/compute/v1/projects/111321772789 403
+[debug] [2026-09-08T07:16:54.980Z] <<< [apiv2][body] GET https://compute.googleapis.com/compute/v1/projects/111321772789 {"error":{"code":403,"message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"consumer":"projects/111321772789","serviceTitle":"Compute Engine API","containerInfo":"111321772789","service":"compute.googleapis.com","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789"}]}]}}
+[debug] [2026-09-08T07:16:54.981Z] unable to look up default compute service account. Falling back to 111321772789-compute@developer.gserviceaccount.com. Error: {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":403,"message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"consumer":"projects/111321772789","serviceTitle":"Compute Engine API","containerInfo":"111321772789","service":"compute.googleapis.com","activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789"}]}]}},"response":{"statusCode":403}},"exit":1,"message":"Request to https://compute.googleapis.com/compute/v1/projects/111321772789 had HTTP Error: 403, Compute Engine API has not been used in project 111321772789 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=111321772789 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":403}
+[debug] [2026-09-08T07:16:54.982Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:54.982Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:54.982Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:getIamPolicy [none]
+[debug] [2026-09-08T07:16:56.319Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:getIamPolicy 200
+[debug] [2026-09-08T07:16:56.319Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:getIamPolicy {"version":1,"etag":"BwZa84RTUYQ=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:111321772789@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-111321772789@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-111321772789@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com","serviceAccount:111321772789@cloudservices.gserviceaccount.com","serviceAccount:np-learnlab@appspot.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-111321772789@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:nattapol@nongki.ac.th"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-111321772789@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]}]}
+[debug] [2026-09-08T07:16:56.320Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:56.320Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:56.320Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:setIamPolicy [none]
+[debug] [2026-09-08T07:16:56.320Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:setIamPolicy {"policy":{"version":1,"etag":"BwZa84RTUYQ=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:111321772789@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-111321772789@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-111321772789@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com","serviceAccount:111321772789@cloudservices.gserviceaccount.com","serviceAccount:np-learnlab@appspot.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-111321772789@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com","serviceAccount:service-111321772789@gcp-sa-pubsub.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:nattapol@nongki.ac.th"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-111321772789@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/pubsub.publisher","members":["serviceAccount:service-111321772789@gs-project-accounts.iam.gserviceaccount.com"]},{"role":"roles/run.invoker","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com"]},{"role":"roles/eventarc.eventReceiver","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com"]}]},"updateMask":"bindings"}
+[debug] [2026-09-08T07:16:57.321Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:setIamPolicy 200
+[debug] [2026-09-08T07:16:57.322Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/111321772789:setIamPolicy {"version":1,"etag":"BwZa84Uc3l0=","bindings":[{"role":"roles/cloudbuild.builds.builder","members":["serviceAccount:111321772789@cloudbuild.gserviceaccount.com"]},{"role":"roles/cloudbuild.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-cloudbuild.iam.gserviceaccount.com"]},{"role":"roles/cloudfunctions.standardServiceAgent","members":["serviceAccount:service-111321772789@gcf-admin-robot.iam.gserviceaccount.com"]},{"role":"roles/containerregistry.ServiceAgent","members":["serviceAccount:service-111321772789@containerregistry.iam.gserviceaccount.com"]},{"role":"roles/editor","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com","serviceAccount:111321772789@cloudservices.gserviceaccount.com","serviceAccount:np-learnlab@appspot.gserviceaccount.com"]},{"role":"roles/eventarc.eventReceiver","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com"]},{"role":"roles/firebase.managementServiceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebase.iam.gserviceaccount.com"]},{"role":"roles/firebase.sdkAdminServiceAgent","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebaseauth.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]},{"role":"roles/firebasemods.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasemods.iam.gserviceaccount.com"]},{"role":"roles/firebaserules.system","members":["serviceAccount:service-111321772789@firebase-rules.iam.gserviceaccount.com"]},{"role":"roles/firebasestorage.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firebasestorage.iam.gserviceaccount.com"]},{"role":"roles/firestore.serviceAgent","members":["serviceAccount:service-111321772789@gcp-sa-firestore.iam.gserviceaccount.com"]},{"role":"roles/iam.serviceAccountTokenCreator","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com","serviceAccount:service-111321772789@gcp-sa-pubsub.iam.gserviceaccount.com"]},{"role":"roles/owner","members":["user:nattapol@nongki.ac.th"]},{"role":"roles/pubsub.publisher","members":["serviceAccount:service-111321772789@gs-project-accounts.iam.gserviceaccount.com"]},{"role":"roles/run.invoker","members":["serviceAccount:111321772789-compute@developer.gserviceaccount.com"]},{"role":"roles/run.serviceAgent","members":["serviceAccount:service-111321772789@serverless-robot-prod.iam.gserviceaccount.com"]},{"role":"roles/storage.admin","members":["serviceAccount:firebase-adminsdk-fbsvc@np-learnlab.iam.gserviceaccount.com"]}]}
+[debug] [2026-09-08T07:16:57.324Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:57.324Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:57.324Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases pageSize=10&pageToken=
+[debug] [2026-09-08T07:16:57.805Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases 200
+[debug] [2026-09-08T07:16:57.805Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases {"releases":[{"name":"projects/np-learnlab/releases/cloud.firestore","rulesetName":"projects/np-learnlab/rulesets/284e99f7-1146-46b4-9805-0dcb3426615f","createTime":"2026-09-07T07:26:56.794985Z","updateTime":"2026-09-08T06:38:44.215892Z"},{"name":"projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app","rulesetName":"projects/np-learnlab/rulesets/c2bd5453-6234-4705-aa36-103f1bfab93d","createTime":"2026-09-08T07:13:02.088656Z","updateTime":"2026-09-08T07:13:02.088656Z"}]}
+[debug] [2026-09-08T07:16:57.830Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:57.831Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:57.831Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/c2bd5453-6234-4705-aa36-103f1bfab93d [none]
+[debug] [2026-09-08T07:16:59.139Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/c2bd5453-6234-4705-aa36-103f1bfab93d 200
+[debug] [2026-09-08T07:16:59.139Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/c2bd5453-6234-4705-aa36-103f1bfab93d [omitted]
+[info] i  storage: uploading rules storage.rules... 
+[debug] [2026-09-08T07:16:59.142Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:59.142Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:59.142Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets [none]
+[debug] [2026-09-08T07:16:59.142Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets [omitted]
+[debug] [2026-09-08T07:16:59.744Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets 200
+[debug] [2026-09-08T07:16:59.745Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets {"name":"projects/np-learnlab/rulesets/edd11f9c-2cac-4884-9fbd-9aca32dd2a0b","source":{"files":[{"content":"rules_version = '2';\nservice firebase.storage {\n  match /b/{bucket}/o {\n    // ไฟล์ชั่วคราวก่อนถูก Cloud Function ย้ายขึ้น Google Drive แล้วลบทิ้ง\n    // path: pending-uploads/{jobId}/{fileName}\n    match /pending-uploads/{jobId}/{fileName} {\n      allow read: if false; // ฝั่ง client อ่านไม่ได้เลย มีแค่ Cloud Function (admin SDK) เข้าถึง\n      allow write: if request.auth != null\n                   && request.resource.size < 50 * 1024 * 1024; // จำกัด 50MB/ไฟล์ ปรับได้ตามต้องการ\n      allow delete: if false; // ให้ Cloud Function ลบเท่านั้น\n    }\n    match /{allPaths=**} {\n      allow read, write: if false;\n    }\n  }\n}\n","name":"storage.rules"}]},"createTime":"2026-09-08T07:16:59.559327Z","metadata":{"services":["firebase.storage"]}}
+[debug] [2026-09-08T07:16:59.745Z] [rules] created ruleset projects/np-learnlab/rulesets/edd11f9c-2cac-4884-9fbd-9aca32dd2a0b
+[debug] [2026-09-08T07:16:59.745Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:59.746Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:16:59.746Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases pageSize=10&pageToken=
+[debug] [2026-09-08T07:17:00.062Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases 200
+[debug] [2026-09-08T07:17:00.062Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases {"releases":[{"name":"projects/np-learnlab/releases/cloud.firestore","rulesetName":"projects/np-learnlab/rulesets/284e99f7-1146-46b4-9805-0dcb3426615f","createTime":"2026-09-07T07:26:56.794985Z","updateTime":"2026-09-08T06:38:44.215892Z"},{"name":"projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app","rulesetName":"projects/np-learnlab/rulesets/c2bd5453-6234-4705-aa36-103f1bfab93d","createTime":"2026-09-08T07:13:02.088656Z","updateTime":"2026-09-08T07:13:02.088656Z"}]}
+[debug] [2026-09-08T07:17:00.063Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:00.063Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:00.063Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/284e99f7-1146-46b4-9805-0dcb3426615f [none]
+[debug] [2026-09-08T07:17:01.372Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/284e99f7-1146-46b4-9805-0dcb3426615f 200
+[debug] [2026-09-08T07:17:01.373Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets/284e99f7-1146-46b4-9805-0dcb3426615f [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-09-08T07:17:01.373Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:01.373Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:01.374Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets [none]
+[debug] [2026-09-08T07:17:01.374Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets [omitted]
+[debug] [2026-09-08T07:17:02.819Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets 200
+[debug] [2026-09-08T07:17:02.819Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/np-learnlab/rulesets {"name":"projects/np-learnlab/rulesets/2653b007-bbe5-443c-8875-b741c65792ad","source":{"files":[{"content":"rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    function isSignedIn() {\n      return request.auth != null;\n    }\n    function myRoles() {\n      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;\n    }\n    function hasRole(role) {\n      return isSignedIn() && role in myRoles();\n    }\n    function isSuperAdmin() {\n      return isSignedIn() && request.auth.token.email == \"nattapol@nongki.ac.th\";\n    }\n    function isStaff() {\n      return hasRole('staff') || isSuperAdmin();\n    }\n\n    // users/{uid} — โปรไฟล์ผู้ใช้ + สิทธิ์\n    match /users/{uid} {\n      allow read: if isSignedIn();\n      allow create: if isSignedIn() && request.auth.uid == uid;\n      // เจ้าของแก้ข้อมูลตัวเองได้ แต่แก้ field roles ไม่ได้ / เจ้าหน้าที่แก้ roles ของคนอื่นได้\n      allow update: if isSignedIn() && (\n        (request.auth.uid == uid && request.resource.data.roles == resource.data.roles) ||\n        isStaff()\n      );\n    }\n\n    // courses/{id}\n    match /courses/{courseId} {\n      allow read: if isSignedIn();\n      allow create: if hasRole('instructor') || isStaff();\n      allow update, delete: if isStaff() || (hasRole('instructor') && resource.data.ownerUid == request.auth.uid);\n\n      // courses/{id}/lessons/{lessonId} — เนื้อหาข้อความ/เอกสารภายในหลักสูตร\n      // (ไฟล์จริงเก็บบน Google Drive แยกต่างหาก ที่นี่เก็บแค่ metadata/ลำดับ)\n      function isCourseOwner() {\n        return hasRole('instructor') &&\n          get(/databases/$(database)/documents/courses/$(courseId)).data.ownerUid == request.auth.uid;\n      }\n      match /lessons/{lessonId} {\n        allow read: if isSignedIn();\n        allow write: if isStaff() || isCourseOwner();\n      }\n    }\n\n    // uploadJobs/{jobId} — สถานะงานอัปโหลดไฟล์ขึ้น Google Drive (เขียนโดย Cloud Function เท่านั้น)\n    // client แค่ \"อ่าน\" เพื่อ listen ผลลัพธ์แบบ realtime ตอนอัปโหลด\n    match /uploadJobs/{jobId} {\n      allow read: if isSignedIn();\n      allow write: if false; // Cloud Function ใช้ admin SDK เขียน ไม่ผ่าน rules นี้\n    }\n\n    // enrollments/{uid_courseId}\n    match /enrollments/{enrollId} {\n      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isStaff());\n      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;\n      allow update: if isSignedIn() && (resource.data.uid == request.auth.uid || isStaff());\n      allow delete: if isStaff();\n    }\n  }\n}\n","name":"firestore.rules"}]},"createTime":"2026-09-08T07:17:02.622479Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-09-08T07:17:02.819Z] [rules] created ruleset projects/np-learnlab/rulesets/2653b007-bbe5-443c-8875-b741c65792ad
+[debug] [2026-09-08T07:17:02.822Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:02.822Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:02.822Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com [none]
+[debug] [2026-09-08T07:17:02.822Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com  x-goog-user-project=np-learnlab
+[debug] [2026-09-08T07:17:04.451Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com 200
+[debug] [2026-09-08T07:17:04.451Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com [omitted]
+[debug] [2026-09-08T07:17:04.451Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:04.451Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:04.451Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com:enable [none]
+[debug] [2026-09-08T07:17:04.452Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com:enable  x-goog-user-project=np-learnlab
+[debug] [2026-09-08T07:17:05.133Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com:enable 200
+[debug] [2026-09-08T07:17:05.134Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/np-learnlab/services/cloudbilling.googleapis.com:enable [omitted]
+[debug] [2026-09-08T07:17:15.158Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:15.159Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:15.159Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/np-learnlab/billingInfo [none]
+[debug] [2026-09-08T07:17:15.159Z] >>> [apiv2][(partial)header] GET https://cloudbilling.googleapis.com/v1/projects/np-learnlab/billingInfo  x-goog-user-project=np-learnlab
+[debug] [2026-09-08T07:17:16.879Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/np-learnlab/billingInfo 200
+[debug] [2026-09-08T07:17:16.879Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/np-learnlab/billingInfo {"name":"projects/np-learnlab/billingInfo","projectId":"np-learnlab","billingAccountName":"billingAccounts/01A4B0-654763-F20F55","billingEnabled":true}
+[debug] [2026-09-08T07:17:16.883Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:16.884Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:16.884Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions:generateUploadUrl [none]
+[debug] [2026-09-08T07:17:19.817Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions:generateUploadUrl 200
+[debug] [2026-09-08T07:17:19.817Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com/2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip?GoogleAccessId=service-111321772789@gcf-admin-robot.iam.gserviceaccount.com&Expires=1788853639&Signature=tYSYp4fZmeFMfKxIg9D47OW%2F%2BZ%2BYYYDjcViMm5dd9hcPyOKJW3TCyeRsEfZoPksEIiCu%2F0X2h0SgjW1oJkhuhZNK2kdZ8QVuWO%2BpjeESMs7Z4CLE%2FoX25TXwZbgbqqv95G%2BzaNHmcsH6f8SE3ohmP3B0Oa%2BjAAcldeYbk2DH%2FvgHBRFtH2Vj%2FXCYe61xRl2Y03Zi4GOMUNXu6mMeR900CoftjE7b7Pd%2BfOjCAABO6KRdx3yC8aj43izJ0Ax9qJ%2BqbcjA5F01%2BBKETbq68qmpWbb3EaqZfj3qLGm%2BST0%2BOZ6MjcLuO5razApvd7Et74w6Q0FJnQiKFqnbW%2FS%2BKgtEBw%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com","object":"2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip"}}
+[debug] [2026-09-08T07:17:19.819Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com/2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip GoogleAccessId=service-111321772789%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1788853639&Signature=tYSYp4fZmeFMfKxIg9D47OW%2F%2BZ%2BYYYDjcViMm5dd9hcPyOKJW3TCyeRsEfZoPksEIiCu%2F0X2h0SgjW1oJkhuhZNK2kdZ8QVuWO%2BpjeESMs7Z4CLE%2FoX25TXwZbgbqqv95G%2BzaNHmcsH6f8SE3ohmP3B0Oa%2BjAAcldeYbk2DH%2FvgHBRFtH2Vj%2FXCYe61xRl2Y03Zi4GOMUNXu6mMeR900CoftjE7b7Pd%2BfOjCAABO6KRdx3yC8aj43izJ0Ax9qJ%2BqbcjA5F01%2BBKETbq68qmpWbb3EaqZfj3qLGm%2BST0%2BOZ6MjcLuO5razApvd7Et74w6Q0FJnQiKFqnbW%2FS%2BKgtEBw%3D%3D
+[debug] [2026-09-08T07:17:19.819Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com/2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip [stream]
+[debug] [2026-09-08T07:17:20.424Z] <<< [apiv2][status] PUT https://storage.googleapis.com/gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com/2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip 200
+[debug] [2026-09-08T07:17:20.424Z] <<< [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com/2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip [omitted]
+[info] ✔  functions: functions source uploaded successfully 
+[debug] [2026-09-08T07:17:20.427Z] [rules] releasing firebase.storage/np-learnlab.firebasestorage.app with ruleset projects/np-learnlab/rulesets/edd11f9c-2cac-4884-9fbd-9aca32dd2a0b
+[debug] [2026-09-08T07:17:20.427Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:20.427Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:20.428Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app [none]
+[debug] [2026-09-08T07:17:20.428Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app {"release":{"name":"projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app","rulesetName":"projects/np-learnlab/rulesets/edd11f9c-2cac-4884-9fbd-9aca32dd2a0b"}}
+[debug] [2026-09-08T07:17:21.968Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app 200
+[debug] [2026-09-08T07:17:21.968Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app {"name":"projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app","rulesetName":"projects/np-learnlab/rulesets/edd11f9c-2cac-4884-9fbd-9aca32dd2a0b","createTime":"2026-09-08T07:13:02.088656Z","updateTime":"2026-09-08T07:17:21.786990Z"}
+[debug] [2026-09-08T07:17:21.968Z] [rules] updated release projects/np-learnlab/releases/firebase.storage/np-learnlab.firebasestorage.app
+[info] ✔  storage: released rules storage.rules to firebase.storage 
+[debug] [2026-09-08T07:17:21.968Z] [rules] releasing cloud.firestore with ruleset projects/np-learnlab/rulesets/2653b007-bbe5-443c-8875-b741c65792ad
+[debug] [2026-09-08T07:17:21.969Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:21.969Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:21.969Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/cloud.firestore [none]
+[debug] [2026-09-08T07:17:21.969Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/cloud.firestore {"release":{"name":"projects/np-learnlab/releases/cloud.firestore","rulesetName":"projects/np-learnlab/rulesets/2653b007-bbe5-443c-8875-b741c65792ad"}}
+[debug] [2026-09-08T07:17:23.382Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/cloud.firestore 200
+[debug] [2026-09-08T07:17:23.382Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/np-learnlab/releases/cloud.firestore {"name":"projects/np-learnlab/releases/cloud.firestore","rulesetName":"projects/np-learnlab/rulesets/2653b007-bbe5-443c-8875-b741c65792ad","createTime":"2026-09-07T07:26:56.794985Z","updateTime":"2026-09-08T07:17:23.250152Z"}
+[debug] [2026-09-08T07:17:23.382Z] [rules] updated release projects/np-learnlab/releases/cloud.firestore
+[info] ✔  firestore: released rules firestore.rules to cloud.firestore 
+[info] i  functions: creating Node.js 20 (2nd Gen) function uploadToDrive(us-east1)... 
+[debug] [2026-09-08T07:17:23.391Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:23.391Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:23.392Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions functionId=uploadToDrive
+[debug] [2026-09-08T07:17:23.392Z] >>> [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions {"name":"projects/np-learnlab/locations/us-east1/functions/uploadToDrive","buildConfig":{"runtime":"nodejs20","entryPoint":"uploadToDrive","source":{"storageSource":{"bucket":"gcf-v2-uploads-111321772789.us-east1.cloudfunctions.appspot.com","object":"2ffa1616-f804-4e22-b2a3-de0e6d7da432.zip"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""}},"serviceConfig":{"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"np-learnlab\",\"storageBucket\":\"np-learnlab.firebasestorage.app\"}","GCLOUD_PROJECT":"np-learnlab","EVENTARC_CLOUD_EVENT_SOURCE":"projects/np-learnlab/locations/us-east1/services/uploadToDrive","FUNCTION_REGION":"us-east1","FUNCTION_SIGNATURE_TYPE":"cloudevent","FUNCTION_TARGET":"uploadToDrive","LOG_EXECUTION_ID":"true"},"ingressSettings":null,"timeoutSeconds":300,"serviceAccountEmail":null,"availableMemory":"512Mi","minInstanceCount":null,"maxInstanceCount":null,"maxInstanceRequestConcurrency":80,"availableCpu":"1","vpcConnector":null,"vpcConnectorEgressSettings":null,"directVpcNetworkInterface":null,"directVpcEgress":null},"labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"ddebb2a8fe59b69268aea8546615adf5a53968b1"},"eventTrigger":{"eventType":"google.cloud.storage.object.v1.finalized","retryPolicy":"RETRY_POLICY_DO_NOT_RETRY","eventFilters":[{"attribute":"bucket","value":"np-learnlab.firebasestorage.app"}],"triggerRegion":"us-east1"}}
+[debug] [2026-09-08T07:17:41.940Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions 400
+[debug] [2026-09-08T07:17:41.941Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions {"error":{"code":400,"message":"Validation failed for trigger projects/np-learnlab/locations/us-east1/triggers/uploadtodrive-975494: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.","status":"FAILED_PRECONDITION"}}
+[warn] ⚠  functions: Request to https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions?functionId=uploadToDrive had HTTP Error: 400, Validation failed for trigger projects/np-learnlab/locations/us-east1/triggers/uploadtodrive-975494: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role. 
+[warn] ⚠  functions: Since this is your first time using 2nd gen functions, we need a little bit longer to finish setting everything up. Retry the deployment in a few minutes. 
+[warn] ⚠  functions:  failed to create function projects/np-learnlab/locations/us-east1/functions/uploadToDrive 
+[error] Failed to create function projects/np-learnlab/locations/us-east1/functions/uploadToDrive
+[warn] ⚠  functions: Deploys failed. Skipping deletes. 
+[debug] [2026-09-08T07:17:41.947Z] Total Function Deployment time: 18555
+[debug] [2026-09-08T07:17:41.947Z] 1 Functions Deployed
+[debug] [2026-09-08T07:17:41.947Z] 1 Functions Errored
+[debug] [2026-09-08T07:17:41.947Z] 0 Function Deployments Aborted
+[debug] [2026-09-08T07:17:41.947Z] Average Function Deployment time: 18554
+[info] 
+[info] Functions deploy had errors with the following functions:
+	uploadToDrive(us-east1)
+[debug] [2026-09-08T07:17:42.297Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:42.297Z] Checked if tokens are valid: true, expires at: 1788855012265
+[debug] [2026-09-08T07:17:42.297Z] >>> [apiv2][query] GET https://artifactregistry.googleapis.com/v1/projects/np-learnlab/locations/us-east1/repositories/gcf-artifacts [none]
+[debug] [2026-09-08T07:17:43.171Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/np-learnlab/locations/us-east1/repositories/gcf-artifacts 404
+[debug] [2026-09-08T07:17:43.171Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/np-learnlab/locations/us-east1/repositories/gcf-artifacts {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[debug] [2026-09-08T07:17:43.172Z] Failed to check artifact cleanup policy for region us-east1: Request to https://artifactregistry.googleapis.com/v1/projects/np-learnlab/locations/us-east1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found. {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}},"response":{"statusCode":404}},"exit":1,"message":"Request to https://artifactregistry.googleapis.com/v1/projects/np-learnlab/locations/us-east1/repositories/gcf-artifacts had HTTP Error: 404, Requested entity was not found.","status":404}
+[debug] [2026-09-08T07:17:43.174Z] Functions deploy failed.
+[debug] [2026-09-08T07:17:43.174Z] {
+  "endpoint": {
+    "id": "uploadToDrive",
+    "project": "np-learnlab",
+    "region": "us-east1",
+    "entryPoint": "uploadToDrive",
+    "platform": "gcfv2",
+    "runtime": "nodejs20",
+    "eventTrigger": {
+      "eventType": "google.cloud.storage.object.v1.finalized",
+      "retry": false,
+      "eventFilters": {
+        "bucket": "np-learnlab.firebasestorage.app"
+      },
+      "region": "us-east1"
+    },
+    "labels": {
+      "deployment-tool": "cli-firebase"
+    },
+    "serviceAccount": null,
+    "ingressSettings": null,
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 300,
+    "maxInstances": null,
+    "minInstances": null,
+    "concurrency": 80,
+    "vpc": null,
+    "environmentVariables": {
+      "FIREBASE_CONFIG": "{\"projectId\":\"np-learnlab\",\"storageBucket\":\"np-learnlab.firebasestorage.app\"}",
+      "GCLOUD_PROJECT": "np-learnlab",
+      "EVENTARC_CLOUD_EVENT_SOURCE": "projects/np-learnlab/locations/us-east1/services/uploadToDrive",
+      "FUNCTION_REGION": "us-east1"
+    },
+    "codebase": "default",
+    "cpu": 1,
+    "targetedByOnly": false,
+    "hash": "ddebb2a8fe59b69268aea8546615adf5a53968b1"
+  },
+  "op": "create",
+  "original": {
+    "name": "FirebaseError",
+    "children": [],
+    "context": {
+      "function": "projects/np-learnlab/locations/us-east1/functions/uploadToDrive"
+    },
+    "exit": 1,
+    "message": "Failed to create function projects/np-learnlab/locations/us-east1/functions/uploadToDrive",
+    "original": {
+      "name": "FirebaseError",
+      "children": [],
+      "context": {
+        "body": {
+          "error": {
+            "code": 400,
+            "message": "Validation failed for trigger projects/np-learnlab/locations/us-east1/triggers/uploadtodrive-975494: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+            "status": "FAILED_PRECONDITION"
+          }
+        },
+        "response": {
+          "statusCode": 400
+        }
+      },
+      "exit": 1,
+      "message": "Request to https://cloudfunctions.googleapis.com/v2/projects/np-learnlab/locations/us-east1/functions?functionId=uploadToDrive had HTTP Error: 400, Validation failed for trigger projects/np-learnlab/locations/us-east1/triggers/uploadtodrive-975494: Invalid resource state for \"\": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.",
+      "status": 400
+    },
+    "status": 400,
+    "code": 400
+  }
+}
+[debug] [2026-09-08T07:17:43.253Z] Error: Failed to create function uploadToDrive in region us-east1
+    at /Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:452:27
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Fabricator.createV2Function (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:431:30)
+    at async Fabricator.createEndpoint (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:273:13)
+    at async Fabricator.wrapOperation (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:258:13)
+    at async Promise.all (index 0)
+    at async Promise.allSettled (index 0)
+    at async Fabricator.applyPlan (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/fabricator.js:175:45)
+    at async release (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/functions/release/index.js:89:21)
+    at async chain (/Users/lekthehero/.npm-global/lib/node_modules/firebase-tools/lib/deploy/index.js:114:9)
+[error] 
+[error] Error: There was an error deploying functions

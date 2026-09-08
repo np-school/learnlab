@@ -4,6 +4,8 @@
     "ignore": [
       "firebase.json",
       "firestore.rules",
+      "storage.rules",
+      "functions/**",
       "**/.*",
       "**/node_modules/**",
       "README.md"
@@ -11,5 +13,14 @@
   },
   "firestore": {
     "rules": "firestore.rules"
-  }
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default"
+    }
+  ]
 }

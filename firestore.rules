@@ -47,6 +47,13 @@ service cloud.firestore {
       }
     }
 
+    // uploadJobs/{jobId} — สถานะงานอัปโหลดไฟล์ขึ้น Google Drive (เขียนโดย Cloud Function เท่านั้น)
+    // client แค่ "อ่าน" เพื่อ listen ผลลัพธ์แบบ realtime ตอนอัปโหลด
+    match /uploadJobs/{jobId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Cloud Function ใช้ admin SDK เขียน ไม่ผ่าน rules นี้
+    }
+
     // enrollments/{uid_courseId}
     match /enrollments/{enrollId} {
       allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isStaff());

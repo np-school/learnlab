@@ -1,110 +1,67 @@
 // =========================================================
 // NP-LearnLab — อัปโหลดไฟล์เอกสารขึ้น Google Drive (Shared Drive)
-// ใช้ Google Identity Services (GIS) ขอ access token แยกจาก Firebase Auth
-// เพราะ Firebase Google Sign-In ไม่ได้ขอสิทธิ์ Drive มาด้วยตั้งแต่ล็อกอิน
+// เวอร์ชันนี้อัปโหลดผ่าน Firebase Storage แล้วให้ Cloud Function
+// (functions/index.js) เป็นคนอัปขึ้น Drive จริงด้วย Service Account
+// จึงไม่มีการขอ OAuth popup จากเบราว์เซอร์ครูอีกต่อไป — ใช้ได้แม้เปิด
+// จากในแอป LINE/Facebook หรือเบราว์เซอร์ที่บล็อก popup
 //
-// วิธีตั้งค่า (ดูขั้นตอนละเอียดใน README.md หัวข้อ "ตั้งค่า Google Drive upload"):
-// 1. สร้าง OAuth 2.0 Client ID (Web application) ที่ Google Cloud Console
-//    แล้วนำมาใส่แทนค่า DRIVE_CLIENT_ID ด้านล่าง
-// 2. เปิดใช้งาน Google Drive API ในโปรเจกต์เดียวกัน
-// 3. ใส่ Folder ID ของโฟลเดอร์ปลายทางใน Shared Drive ที่ DRIVE_SHARED_FOLDER_ID
-//    (เปิดโฟลเดอร์ใน Drive แล้วคัดลอกส่วนท้ายของ URL หลัง /folders/)
+// ต้องตั้งค่าก่อนใช้งาน (ดู README หัวข้อ "ตั้งค่า Google Drive upload"):
+// 1. อัปเกรดโปรเจกต์ Firebase เป็นแผน Blaze
+// 2. เพิ่มอีเมล Service Account (<project-id>@appspot.gserviceaccount.com)
+//    เป็นสมาชิก Shared Drive ปลายทาง (Content manager ขึ้นไป)
+// 3. firebase deploy --only functions,storage
 // =========================================================
 
-const DRIVE_CLIENT_ID = "805430097617-hhqdjiqge4qotuh7mve7fqbsr3m8ujs3.apps.googleusercontent.com";
-const DRIVE_SHARED_FOLDER_ID = "0AMfNDNABh-XBUk9PVA";
+// อัปโหลดไฟล์ 1 ไฟล์: เก็บที่ Storage ชั่วคราว → รอ Cloud Function อัปขึ้น Drive
+// onProgress(percent:number) เรียกระหว่างอัปโหลดขึ้น Storage
+// resolve({ id, name, webViewLink, mimeType, iconLink, size })
+function uploadFileToDrive(file, onProgress) {
+  const jobId = (crypto.randomUUID && crypto.randomUUID()) ||
+    (Date.now() + "-" + Math.random().toString(16).slice(2));
+  const path = "pending-uploads/" + jobId + "/" + file.name;
+  const ref = storage.ref(path);
 
-// ขอสิทธิ์แบบจำกัดเฉพาะไฟล์ที่แอปนี้สร้าง/เปิดเอง (ไม่แตะไฟล์อื่นใน Drive ของผู้ใช้)
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
-
-let driveTokenClient = null;
-let driveAccessToken = null;
-let driveTokenExpiry = 0;
-
-function driveConfigured() {
-  return DRIVE_CLIENT_ID.indexOf("YOUR_") !== 0 && DRIVE_SHARED_FOLDER_ID.indexOf("YOUR_") !== 0;
-}
-
-// ขอ / ใช้ access token เดิมถ้ายังไม่หมดอายุ
-function ensureDriveToken() {
   return new Promise((resolve, reject) => {
-    if (!driveConfigured()) {
-      reject(new Error("ยังไม่ได้ตั้งค่า Google Drive (DRIVE_CLIENT_ID / DRIVE_SHARED_FOLDER_ID) ใน shared/drive-upload.js"));
-      return;
-    }
-    if (driveAccessToken && Date.now() < driveTokenExpiry - 30000) {
-      resolve(driveAccessToken);
-      return;
-    }
-    if (!window.google || !google.accounts || !google.accounts.oauth2) {
-      reject(new Error("โหลด Google Identity Services ไม่สำเร็จ ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"));
-      return;
-    }
-    if (!driveTokenClient) {
-      driveTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: DRIVE_CLIENT_ID,
-        scope: DRIVE_SCOPE,
-        callback: () => {} // จะถูกตั้งใหม่ทุกครั้งที่เรียกด้านล่าง
-      });
-    }
-    driveTokenClient.callback = (resp) => {
-      if (resp.error) { reject(new Error("ขอสิทธิ์เข้าถึง Google Drive ไม่สำเร็จ: " + resp.error)); return; }
-      driveAccessToken = resp.access_token;
-      driveTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
-      resolve(driveAccessToken);
-    };
-    // เบราว์เซอร์บางตัว (โดยเฉพาะ in-app browser ของ LINE/Facebook หรือมี popup blocker)
-    // จะปิดกั้นหน้าต่าง consent แล้ว error_callback จะถูกเรียกแทน onload ปกติ
-    driveTokenClient.error_callback = (err) => {
-      reject(new Error(
-        "เปิดหน้าต่างยินยอม Google ไม่ได้ (ถูกเบราว์เซอร์บล็อก popup) " +
-        "กรุณาอนุญาต popup ให้เว็บไซต์นี้ หรือเปิดหน้านี้ในเบราว์เซอร์ปกติ " +
-        "(ไม่ใช่ในแอป LINE/Facebook/Messenger) แล้วลองอัปโหลดใหม่อีกครั้ง"
-      ));
-    };
-    // ครั้งแรกให้ผู้ใช้กดยินยอม (consent) ครั้งต่อไปขอ token เงียบๆ ถ้ายังไม่หมดอายุ session
-    try {
-      driveTokenClient.requestAccessToken({ prompt: driveAccessToken ? "" : "consent" });
-    } catch (e) {
-      reject(new Error("เปิดหน้าต่างยินยอม Google ไม่ได้: " + e.message));
-    }
+    const task = ref.put(file);
+
+    task.on("state_changed", (snap) => {
+      if (onProgress && snap.totalBytes) {
+        onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
+      }
+    }, (err) => {
+      reject(new Error("อัปโหลดไม่สำเร็จ: " + err.message));
+    }, () => {
+      // อัปขึ้น Storage เสร็จแล้ว — รอ Cloud Function อัปขึ้น Drive ต่อ
+      if (onProgress) onProgress(100);
+      waitForDriveJob(jobId).then(resolve).catch(reject);
+    });
   });
 }
 
-// อัปโหลดไฟล์ 1 ไฟล์ขึ้นโฟลเดอร์ปลายทางใน Shared Drive
-// onProgress(percent:number) เรียกระหว่างอัปโหลด (ถ้ามี)
-// resolve({ id, name, webViewLink, mimeType, iconLink, size })
-function uploadFileToDrive(file, onProgress) {
-  return ensureDriveToken().then(token => {
-    const metadata = {
-      name: file.name,
-      parents: [DRIVE_SHARED_FOLDER_ID]
-    };
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", file);
-
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      // supportsAllDrives=true จำเป็นเสมอเมื่ออัปโหลดเข้า Shared Drive
-      xhr.open("POST", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name,webViewLink,webContentLink,mimeType,iconLink,size");
-      xhr.setRequestHeader("Authorization", "Bearer " + token);
-      xhr.upload.onprogress = (e) => {
-        if (onProgress && e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-      };
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
-        } else if (xhr.status === 401) {
-          // token หมดอายุ/ถูกเพิกถอนกลางทาง — เคลียร์ไว้ให้ครั้งหน้าขอใหม่
-          driveAccessToken = null;
-          reject(new Error("สิทธิ์เข้าถึง Google Drive หมดอายุ กรุณาลองอัปโหลดใหม่อีกครั้ง"));
-        } else {
-          reject(new Error("อัปโหลดไม่สำเร็จ (HTTP " + xhr.status + ")"));
-        }
-      };
-      xhr.onerror = () => reject(new Error("อัปโหลดไม่สำเร็จ: เครือข่ายขัดข้อง"));
-      xhr.send(form);
+// รอผลลัพธ์จาก Cloud Function ผ่าน Firestore doc uploadJobs/{jobId}
+// (เขียนโดย functions/index.js หลังอัปโหลดขึ้น Drive สำเร็จ/พลาด)
+function waitForDriveJob(jobId, timeoutMs) {
+  timeoutMs = timeoutMs || 60000;
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const unsub = db.collection("uploadJobs").doc(jobId).onSnapshot((doc) => {
+      const data = doc.data();
+      if (!data) return; // ยังไม่มี doc แปลว่า Function ยังไม่เริ่มทำงาน
+      if (data.status === "done") {
+        done = true; unsub(); clearTimeout(timer);
+        resolve(data.driveFile);
+      } else if (data.status === "error") {
+        done = true; unsub(); clearTimeout(timer);
+        reject(new Error(data.error || "อัปโหลดขึ้น Google Drive ไม่สำเร็จ"));
+      }
+    }, (err) => {
+      done = true; unsub(); clearTimeout(timer);
+      reject(new Error("ติดตามสถานะอัปโหลดไม่สำเร็จ: " + err.message));
     });
+    const timer = setTimeout(() => {
+      if (done) return;
+      unsub();
+      reject(new Error("อัปโหลดขึ้น Google Drive ใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง"));
+    }, timeoutMs);
   });
 }

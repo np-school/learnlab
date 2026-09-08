@@ -80,34 +80,36 @@ enrollments/{uid_courseId} → { uid, courseId, courseTitle, status: 'in_progres
 
 ## ตั้งค่า Google Drive upload (สำหรับเนื้อหาแบบ "เอกสารแนบ")
 
-`course-manage.html` อัปโหลดไฟล์เอกสารขึ้น Google Drive (Shared Drive) โดยตรงจากเบราว์เซอร์ของผู้สอน
-(ไม่มี backend/Cloud Function) โดยใช้ Google Identity Services ขอสิทธิ์ scope
-`drive.file` (เข้าถึงเฉพาะไฟล์ที่แอปนี้สร้างเอง) แยกจาก Firebase Auth ที่ใช้ล็อกอิน ต้องตั้งค่า
-2 ค่าที่ `shared/drive-upload.js`:
+`course-manage.html` อัปโหลดไฟล์เอกสารผ่าน **Firebase Storage** ก่อน แล้ว **Cloud Function**
+(`functions/index.js`) เป็นคนอัปโหลดไฟล์นั้นต่อขึ้น Google Drive (Shared Drive) ด้วย
+**Service Account** ของโปรเจกต์เอง — ผู้สอนจึงไม่ต้องขอสิทธิ์ Google Drive ผ่าน popup
+บนเบราว์เซอร์อีกต่อไป (ใช้งานได้แม้เปิดจากในแอป LINE/Facebook หรือเบราว์เซอร์ที่บล็อก popup)
 
-1. **สร้าง OAuth 2.0 Client ID**
-   - เปิด [Google Cloud Console](https://console.cloud.google.com/) → เลือก/สร้างโปรเจกต์
-     (ใช้โปรเจกต์เดียวกับ Firebase ก็ได้ เพราะ Firebase สร้างบน Google Cloud อยู่แล้ว)
-   - เปิดใช้งาน **Google Drive API**: APIs & Services → Library → ค้นหา "Google Drive API" → Enable
-   - ไปที่ APIs & Services → Credentials → Create Credentials → **OAuth client ID**
-     - Application type: **Web application**
-     - Authorized JavaScript origins: ใส่โดเมนที่โฮสต์ไฟล์นี้ เช่น `https://your-domain.web.app`
-       (และ `http://localhost:5000` ถ้าทดสอบในเครื่อง)
-     - ไม่ต้องใส่ Authorized redirect URIs (ใช้ token flow ไม่ใช่ redirect flow)
-   - คัดลอกค่า **Client ID** มาใส่แทน `YOUR_GOOGLE_OAUTH_CLIENT_ID...` ที่ตัวแปร `DRIVE_CLIENT_ID`
-     ในไฟล์ `shared/drive-upload.js`
-   - ถ้าโปรเจกต์ยังเป็น OAuth consent screen แบบ "Testing" ต้องเพิ่มอีเมลผู้สอนแต่ละคนเป็น
-     **Test user** ก่อน ไม่งั้นจะขอสิทธิ์ไม่ผ่าน (หรือปรับ Publishing status เป็น In production)
+ต้องตั้งค่าดังนี้:
 
-2. **ใส่ Shared Drive Folder ID ปลายทาง**
-   - เปิดโฟลเดอร์ปลายทางใน Shared Drive ด้วยเบราว์เซอร์ แล้วคัดลอกส่วนท้ายของ URL หลัง `/folders/`
-     เช่น `https://drive.google.com/drive/folders/1AbCxEfG...` → ใช้ `1AbCxEfG...`
-   - นำมาใส่แทน `YOUR_SHARED_DRIVE_FOLDER_ID` ที่ตัวแปร `DRIVE_SHARED_FOLDER_ID` ในไฟล์เดียวกัน
-   - ตรวจสอบว่าบัญชี Google ที่ผู้สอนใช้ล็อกอิน (Gmail เดียวกับที่ใช้เข้า NP-LearnLab) เป็นสมาชิกของ
-     Shared Drive นั้นอยู่แล้ว ด้วยสิทธิ์อย่างน้อย **Content manager** (อัปโหลด/สร้างไฟล์ได้)
+1. **อัปเกรดโปรเจกต์ Firebase เป็นแผน Blaze** (Cloud Functions ใช้แผน Spark ไม่ได้ —
+   มี free quota ต่อเดือนให้อยู่แล้ว งานสเกลเล็กแบบนี้ปกติไม่เสียค่าใช้จ่าย)
+2. **เปิดใช้งาน Google Drive API** ในโปรเจกต์ Google Cloud เดียวกับ Firebase:
+   APIs & Services → Library → ค้นหา "Google Drive API" → Enable
+3. **เพิ่ม Service Account เป็นสมาชิก Shared Drive ปลายทาง**
+   - อีเมล Service Account เริ่มต้นของ Firebase คือ `<project-id>@appspot.gserviceaccount.com`
+     (เช่น `np-learnlab@appspot.gserviceaccount.com`) — เช็คชื่อเต็มได้ที่ Google Cloud Console →
+     IAM & Admin → Service Accounts
+   - เปิด Shared Drive ปลายทาง → Manage members → เพิ่มอีเมลนี้เป็นสมาชิก สิทธิ์อย่างน้อย
+     **Content manager**
+4. **ตั้งค่า Folder ID ปลายทาง** ที่ตัวแปร `DRIVE_SHARED_FOLDER_ID` ในไฟล์
+   `functions/index.js` (คัดลอกส่วนท้ายของ URL โฟลเดอร์ปลายทาง)
+5. **ติดตั้งและ deploy**
+   ```bash
+   cd functions && npm install
+   cd ..
+   firebase deploy --only functions,firestore:rules,storage
+   ```
 
-เมื่อผู้สอนกดอัปโหลดไฟล์ครั้งแรก เบราว์เซอร์จะเด้งหน้าต่างยินยอม (consent) ของ Google ขึ้นมาให้กดอนุญาต
-สิทธิ์ Drive ครั้งเดียว หลังจากนั้นจะขอ token ใหม่แบบเงียบๆ จนกว่า session จะหมดอายุ
+กลไกเบื้องหลัง: เบราว์เซอร์ครูอัปโหลดไฟล์ไปที่ `pending-uploads/{jobId}/{ชื่อไฟล์}` ใน Firebase
+Storage (ต้องล็อกอินเท่านั้น อ่านไฟล์กลับไม่ได้) → Cloud Function ที่ trigger จาก Storage
+event ดาวน์โหลดไฟล์นั้นแล้วอัปขึ้น Shared Drive ผ่าน Drive API → เขียนผลลัพธ์ลง Firestore ที่
+`uploadJobs/{jobId}` → หน้าเว็บ listen (`onSnapshot`) รอผลแล้วลบไฟล์ชั่วคราวใน Storage ทิ้ง
 
 ## จุดที่ควรต่อยอด
 
