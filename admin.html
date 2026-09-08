@@ -51,16 +51,16 @@
     <div class="sidebar-wrap" id="labSidebar">
       <div class="sidebar-inner">
         <div class="sec-label">เจ้าหน้าที่</div>
-        <a class="sidebar-btn active" href="#" data-view="dashboard" onclick="goToAdminView('dashboard');return false;">
+        <a class="sidebar-btn active" href="#" data-view="dashboard" data-perm="any" onclick="goToAdminView('dashboard');return false;">
           <i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i><span>หน้าแรก</span>
         </a>
-        <a class="sidebar-btn" href="#" data-view="courses" onclick="goToAdminView('courses');return false;">
+        <a class="sidebar-btn" href="#" data-view="courses" data-perm="courses" onclick="goToAdminView('courses');return false;">
           <i data-lucide="layers" style="width:16px;height:16px;"></i><span>หลักสูตรอบรม</span>
         </a>
-        <a class="sidebar-btn" href="#" data-view="users" onclick="goToAdminView('users');return false;">
+        <a class="sidebar-btn" href="#" data-view="users" data-perm="users" onclick="goToAdminView('users');return false;">
           <i data-lucide="users" style="width:16px;height:16px;"></i><span>รายชื่อผู้ใช้งาน</span>
         </a>
-        <a class="sidebar-btn" href="#" data-view="personnel" onclick="goToAdminView('personnel');return false;">
+        <a class="sidebar-btn" href="#" data-view="personnel" data-perm="personnel" onclick="goToAdminView('personnel');return false;">
           <i data-lucide="id-card" style="width:16px;height:16px;"></i><span>รายชื่อบุคลากร</span>
         </a>
         <div class="sec-label">สมาชิก</div>

@@ -6,6 +6,7 @@
    ══════════════════════════════════════════════════════════ */
 
 var currentUser = null;
+var myPerms = {};     // permissions ของผู้ใช้ปัจจุบัน { training, courses, users, personnel }
 var courses = [];
 var editCourseId = null;
 var activeTab = 'general';
@@ -45,7 +46,8 @@ auth.onAuthStateChanged(function(user) {
   }
   currentUser = user;
   db.collection('admins').doc(user.email).get().then(function(doc) {
-    var allowed = doc.exists && doc.data().permissions && doc.data().permissions.training === true;
+    myPerms = (doc.exists && doc.data().permissions) || {};
+    var allowed = myPerms.training === true || myPerms.courses === true || myPerms.users === true || myPerms.personnel === true;
     if (!allowed) {
       document.getElementById('signinScreen').style.display = 'none';
       document.getElementById('deniedScreen').style.display = 'flex';
@@ -54,13 +56,30 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('signinScreen').style.display = 'none';
     document.getElementById('appShell').style.display = 'flex';
     document.getElementById('userLabel').textContent = user.email;
+    applyAdminMenuPerms();
     loadData();
     // รองรับลิงก์ตรงจากเมนู "เจ้าหน้าที่" ในหน้าสมาชิก (admin.html?view=users เป็นต้น)
-    // ให้เปิดหน้าที่ต้องการได้ทันทีโดยไม่ต้องเข้าหน้าแรกเจ้าหน้าที่ก่อน
+    // ให้เปิดหน้าที่ต้องการได้ทันทีโดยไม่ต้องเข้าหน้าแรกเจ้าหน้าที่ก่อน — แต่ยังต้องเช็คสิทธิ์รายหน้าเสมอ
     var qView = new URLSearchParams(location.search).get('view');
     if (['dashboard', 'courses', 'users', 'personnel'].indexOf(qView) > -1) goToAdminView(qView);
   });
 });
+
+/* ซ่อน/แสดงลิงก์ในไซด์บาร์ทีละอันตามสิทธิ์จริงของผู้ใช้ (data-perm="courses|users|personnel|any")
+   หมายเหตุ: นี่แค่ซ่อน-แสดง UI ไม่ใช่กลไกความปลอดภัย — การกันสิทธิ์จริงอยู่ที่ firestore.rules และ hasViewPerm() ด้านล่าง */
+function applyAdminMenuPerms() {
+  document.querySelectorAll('#labSidebar [data-perm]').forEach(function(el) {
+    var need = el.getAttribute('data-perm');
+    var ok = need === 'any' ? true : myPerms[need] === true; // ถึงจุดนี้แปลว่าผ่าน allowed check มาแล้ว จึงมีสิทธิ์อย่างน้อย 1 อันเสมอ
+    el.style.display = ok ? '' : 'none';
+  });
+}
+
+/* เช็คว่ามีสิทธิ์เข้า view นี้จริงหรือไม่ (ใช้กันทั้งตอนกดเมนูและตอนเข้าตรงผ่าน ?view=) */
+function hasViewPerm(v) {
+  if (v === 'dashboard') return true; // เห็นได้ทุกคนที่ผ่าน allowed check (มีสิทธิ์อย่างน้อย 1 อัน)
+  return myPerms[v] === true;
+}
 
 function loadData() {
   db.collection('training_courses').orderBy('createdAt', 'desc').get().then(function(snap) {
@@ -71,6 +90,8 @@ function loadData() {
 
 /* ══════════════════════ นำทางระหว่างหน้า (SPA state) ══════════════════════ */
 function goToAdminView(v) {
+  // กันไว้ 2 ชั้น: ทั้งกดเมนูเอง และพิมพ์/แก้ URL (?view=...) ตรงๆ โดยไม่มีสิทธิ์
+  if (!hasViewPerm(v)) v = 'dashboard';
   adminView = v;
   document.querySelectorAll('.sidebar-btn[data-view]').forEach(function(el) {
     el.classList.toggle('active', el.getAttribute('data-view') === v);
@@ -83,9 +104,13 @@ function renderView() {
   var meta = ADMIN_PAGE_META[adminView] || ADMIN_PAGE_META.dashboard;
   document.getElementById('pageTitle').textContent = meta[0];
   document.getElementById('pageDesc').textContent = meta[1];
-  document.getElementById('btnNewCourse').style.display = adminView === 'courses' ? 'inline-flex' : 'none';
-  document.getElementById('btnUploadPersonnel').style.display = adminView === 'personnel' ? 'inline-flex' : 'none';
+  document.getElementById('btnNewCourse').style.display = (adminView === 'courses' && hasViewPerm('courses')) ? 'inline-flex' : 'none';
+  document.getElementById('btnUploadPersonnel').style.display = (adminView === 'personnel' && hasViewPerm('personnel')) ? 'inline-flex' : 'none';
 
+  if (!hasViewPerm(adminView)) {
+    document.getElementById('body').innerHTML = '<div class="panel empty">ไม่มีสิทธิ์เข้าถึงหน้านี้ ติดต่อ SuperAdmin เพื่อขอสิทธิ์</div>';
+    return;
+  }
   if (adminView === 'dashboard') { renderDashboard(); return; }
   if (adminView === 'users') { renderUsers(); return; }
   if (adminView === 'personnel') { renderPersonnel(); return; }

@@ -3,11 +3,20 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
     function isSchoolEmail() { return isSignedIn() && request.auth.token.email.matches('.*@nongki[.]ac[.]th$'); }
-    function isTrainingAdmin() {
+    /* ═══ สิทธิ์แบบละเอียดตามส่วนงาน (admins/{email}.permissions.{training|courses|users|personnel}) ═══
+       - hasPerm(p): เช็คสิทธิ์เฉพาะฟิลด์ p ตัวเดียว
+       - isAnyStaff(): มีสิทธิ์อย่างน้อย 1 ใน 4 ตัว — ใช้กับของที่เปิดให้ staff ทุกคนเห็นร่วมกัน (เช่น dashboard, profiles)
+       - isCoursesAdmin() / isUsersAdmin() / isPersonnelAdmin(): สิทธิ์เฉพาะส่วนงานนั้นๆ */
+    function adminDoc() { return get(/databases/$(database)/documents/admins/$(request.auth.token.email)); }
+    function hasPerm(p) {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/admins/$(request.auth.token.email)) &&
-        get(/databases/$(database)/documents/admins/$(request.auth.token.email)).data.permissions.training == true;
+        adminDoc().data.permissions[p] == true;
     }
+    function isAnyStaff()      { return hasPerm('training') || hasPerm('courses') || hasPerm('users') || hasPerm('personnel'); }
+    function isCoursesAdmin()  { return hasPerm('courses'); }
+    function isUsersAdmin()    { return hasPerm('users'); }
+    function isPersonnelAdmin(){ return hasPerm('personnel'); }
     match /admins/{email} {
       allow read: if isSignedIn() && request.auth.token.email == email;
       allow write: if false; // แก้ผ่าน Console/SuperAdmin flow เท่านั้น
@@ -15,54 +24,54 @@ service cloud.firestore {
 
     /* ═══ ข้อมูลส่วนตัวสำหรับใช้บนเกียรติบัตร — เจ้าของอ่าน/เขียนได้เฉพาะเอกสารตัวเอง ═══ */
     match /profiles/{email} {
-      allow read: if (isSchoolEmail() && request.auth.token.email == email) || isTrainingAdmin();
+      allow read: if (isSchoolEmail() && request.auth.token.email == email) || isAnyStaff();
       allow write: if isSchoolEmail() && request.auth.token.email == email;
     }
 
     /* ═══ บันทึกทุกบัญชีที่เคยล็อกอิน (หน้า "รายชื่อผู้ใช้งาน" ฝั่งเจ้าหน้าที่) ═══
        เขียนได้เฉพาะเอกสารของตัวเอง (ตอนล็อกอิน) อ่านทั้งหมดได้เฉพาะแอดมิน */
     match /app_users/{email} {
-      allow read: if isTrainingAdmin();
+      allow read: if isUsersAdmin();
       allow write: if isSchoolEmail() && request.auth.token.email == email;
     }
 
     /* ═══ ข้อมูลบุคลากรที่แอดมินนำเข้า/อัปโหลด — แอดมินเท่านั้นทั้งอ่านและเขียน ═══ */
     match /personnel/{employeeId} {
-      allow read, write: if isTrainingAdmin();
+      allow read, write: if isPersonnelAdmin();
     }
 
     match /training_courses/{courseId} {
-      allow read: if isSchoolEmail() && (resource.data.status == 'published' || isTrainingAdmin());
-      allow write: if isTrainingAdmin();
+      allow read: if isSchoolEmail() && (resource.data.status == 'published' || isCoursesAdmin());
+      allow write: if isCoursesAdmin();
       match /lessons/{lessonId} {
         allow read: if isSchoolEmail();
-        allow write: if isTrainingAdmin();
+        allow write: if isCoursesAdmin();
       }
       match /questions/{qId} {
         // เฉพาะคำถาม+ตัวเลือก ไม่มี 'correct' อยู่ในเอกสารนี้อยู่แล้ว จึงอ่านได้ทั้งสองฝั่ง
         allow read: if isSchoolEmail();
-        allow write: if isTrainingAdmin();
+        allow write: if isCoursesAdmin();
       }
       match /answerKeys/{qId} {
-        // จุดสำคัญที่สุด: เฉลยอ่านได้เฉพาะแอดมิน training เท่านั้น ผู้เรียนอ่านไม่ได้เด็ดขาด
-        allow read: if isTrainingAdmin();
-        allow write: if isTrainingAdmin();
+        // จุดสำคัญที่สุด: เฉลยอ่านได้เฉพาะแอดมินที่มีสิทธิ์ courses เท่านั้น ผู้เรียนอ่านไม่ได้เด็ดขาด
+        allow read: if isCoursesAdmin();
+        allow write: if isCoursesAdmin();
       }
     }
     match /training_enrollments/{enrollId} {
-      allow read: if isTrainingAdmin() || (isSchoolEmail() && resource.data.userEmail == request.auth.token.email);
+      allow read: if isCoursesAdmin() || (isSchoolEmail() && resource.data.userEmail == request.auth.token.email);
       allow create: if isSchoolEmail() && request.resource.data.userEmail == request.auth.token.email;
       // ห้าม client แก้ examScore/status เอง — จุดนั้นเขียนได้จาก Cloud Function (admin SDK) เท่านั้น
       allow update: if (isSchoolEmail() && resource.data.userEmail == request.auth.token.email &&
                           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completedLessons'])) ||
-                        isTrainingAdmin();
+                        isCoursesAdmin();
     }
     match /training_certificates/{certId} {
       // certId ของเอกสาร == certNo เสมอ (ดู functions/index.js) จึงอ่านทีละใบด้วย .doc(certNo) ได้
       // 'get' เปิดสาธารณะไว้เฉพาะหน้า verify.html ที่ต้องรู้เลขที่แน่นอนก่อนเท่านั้น
       // 'list' (query แบบ where/all) ไม่เปิดให้สาธารณะ เพื่อกันการดึงรายชื่อผู้เรียนทั้งหมดออกไป
       allow get: if true;
-      allow list: if isSchoolEmail() || isTrainingAdmin();
+      allow list: if isSchoolEmail() || isCoursesAdmin();
       allow write: if false; // เขียนได้จาก Cloud Function (admin SDK) เท่านั้น
     }
     match /training_counters/{docId} {

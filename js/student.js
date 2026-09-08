@@ -50,17 +50,26 @@ auth.onAuthStateChanged(function(user) {
   loadData();
 });
 
-/* แสดงเมนู "เจ้าหน้าที่" ในไซด์บาร์เฉพาะบัญชีที่มีสิทธิ์แอดมิน (admins/{email}.permissions.training === true)
-   ผู้ใช้ทั่วไปจะไม่เห็นเมนูนี้เลย — การกันสิทธิ์จริงยังคงอยู่ที่ admin.html/admin.js เสมอ
-   จุดนี้แค่ซ่อน-แสดงลิงก์ให้ตรงกับสิทธิ์ ไม่ใช่กลไกความปลอดภัย */
+/* แสดงเมนู "เจ้าหน้าที่" ในไซด์บาร์ตามสิทธิ์รายส่วนงานจริง (admins/{email}.permissions.{training|courses|users|personnel})
+   แต่ละลิงก์ที่มี data-perm="courses|users|personnel" จะโชว์เฉพาะคนที่มีสิทธิ์นั้นๆ
+   ลิงก์ data-perm="any" (หน้าแรกเจ้าหน้าที่) โชว์ให้ทุกคนที่มีสิทธิ์อย่างน้อย 1 อัน
+   ทำงานทันทีตอนล็อกอินเสร็จ ไม่ต้องกดเข้า admin.html ก่อน
+   หมายเหตุ: นี่แค่ซ่อน-แสดงลิงก์ให้ตรงสิทธิ์ ไม่ใช่กลไกความปลอดภัยจริง — การกันสิทธิ์จริงอยู่ที่ firestore.rules เสมอ */
 function checkStaffMenu() {
   db.collection('admins').doc(currentUser.email).get().then(function(doc) {
-    var isStaff = doc.exists && doc.data().permissions && doc.data().permissions.training === true;
-    var el = document.getElementById('staffMenuSection');
-    if (el) el.style.display = isStaff ? 'block' : 'none';
+    var perms = (doc.exists && doc.data().permissions) || {};
+    var hasAny = perms.training === true || perms.courses === true || perms.users === true || perms.personnel === true;
+    var section = document.getElementById('staffMenuSection');
+    if (section) section.style.display = hasAny ? 'block' : 'none';
+    if (!section) return;
+    section.querySelectorAll('[data-perm]').forEach(function(el) {
+      var need = el.getAttribute('data-perm');
+      var ok = need === 'any' ? hasAny : perms[need] === true;
+      el.style.display = ok ? '' : 'none';
+    });
   }).catch(function() {
-    var el = document.getElementById('staffMenuSection');
-    if (el) el.style.display = 'none';
+    var section = document.getElementById('staffMenuSection');
+    if (section) section.style.display = 'none';
   });
 }
 
