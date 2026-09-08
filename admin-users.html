@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผู้ใช้งาน – NP-LearnLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .add-row input{flex:2;min-width:220px;}
+  .role-tags{display:flex;gap:5px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar dark"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <button class="navbar-menu-btn" id="navMenuBtn" title="เมนู" onclick="toggleSidebar(event)"><i data-lucide="menu" style="width:18px;height:18px"></i></button>
+    <div class="navbar-mark"><i data-lucide="shield-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-LearnLab</div><div class="navbar-subtitle">เจ้าหน้าที่</div></div>
+  </div>
+  <div class="navbar-user" id="navbarUser"><span id="userLabel"></span><img id="userAvatar" class="navbar-avatar" alt="บัญชีผู้ใช้"><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+<div class="role-switch" id="roleSwitch"></div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="shell">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">ผู้ใช้งาน <span id="userCount" style="font-size:13px;font-weight:700;color:var(--text3);"></span></div>
+      <div class="page-sub">รายชื่อผู้ใช้งานที่ล็อกอินเข้าระบบทั้งหมด — ค้นหาและมอบสิทธิ์ผู้สร้างหลักสูตร/เจ้าหน้าที่ได้ที่นี่</div>
+    </div>
+
+    <div class="add-row">
+      <input id="searchInput" placeholder="ค้นหาชื่อ / อีเมล..." oninput="renderUserTable()">
+    </div>
+
+    <div class="card" style="padding:0;overflow-x:auto;">
+      <table>
+        <thead><tr><th>ชื่อ-นามสกุล</th><th>อีเมล</th><th>หน่วยงาน</th><th>สิทธิ์การใช้งาน</th><th></th></tr></thead>
+        <tbody id="userBody"></tbody>
+      </table>
+    </div>
+    <div id="userEmpty" class="empty-state" style="display:none;">
+      <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:8px;"></i>
+      <div>ไม่พบผู้ใช้งาน</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roleModal">
+  <div class="modal-box">
+    <h3>มอบสิทธิ์การใช้งาน</h3>
+    <p class="hint" id="roleModalWho" style="margin-bottom:16px;"></p>
+    <div class="field" style="margin-bottom:12px;">
+      <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="roleInstructor" style="width:auto;">ผู้สร้างหลักสูตร — สร้างและจัดการหลักสูตรของตัวเองได้</label>
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="roleStaff" style="width:auto;">เจ้าหน้าที่ — ดูแลระบบ จัดการหลักสูตรและผู้ใช้งานทั้งหมด</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRoleModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveRoleModal()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/menu.js"></script>
+<script src="js/admin-users.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>การอบรมของฉัน – NP-LearnLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .filter-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-tabs button{background:#fff;border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:100px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .filter-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .mc-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap;}
+  .mc-icon{width:46px;height:46px;border-radius:12px;background:var(--accent-tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .mc-body{flex:1;min-width:200px;}
+  .mc-title{font-weight:800;font-size:14px;}
+  .mc-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+  .mc-progress{width:160px;flex-shrink:0;}
+  .mc-progress .pct{font-size:11.5px;color:var(--text3);margin-top:4px;}
+  .mc-action{flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <button class="navbar-menu-btn" id="navMenuBtn" title="เมนู" onclick="toggleSidebar(event)"><i data-lucide="menu" style="width:18px;height:18px"></i></button>
+    <div class="navbar-mark"><i data-lucide="graduation-cap" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-LearnLab</div><div class="navbar-subtitle">ผู้ใช้ทั่วไป</div></div>
+  </div>
+  <div class="navbar-user" id="navbarUser"><span id="userLabel"></span><img id="userAvatar" class="navbar-avatar" alt="บัญชีผู้ใช้"><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+<div class="role-switch" id="roleSwitch"></div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="shell">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">การอบรมของฉัน</div>
+      <div class="page-sub">รายการหลักสูตรที่สมัครอบรม พร้อมความคืบหน้าและเกียรติบัตร</div>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="active" data-filter="all" onclick="setFilter('all')">ทั้งหมด</button>
+      <button data-filter="in_progress" onclick="setFilter('in_progress')">กำลังเรียน</button>
+      <button data-filter="completed" onclick="setFilter('completed')">เรียนจบแล้ว</button>
+    </div>
+
+    <div id="mcList"></div>
+    <div id="mcEmpty" class="empty-state" style="display:none;">
+      <i data-lucide="inbox" style="width:32px;height:32px;margin-bottom:8px;"></i>
+      <div>ยังไม่มีหลักสูตรในหมวดนี้</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/menu.js"></script>
+<script src="js/my-courses.js"></script>
+</body>
+</html>

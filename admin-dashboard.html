@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดระบบ – NP-LearnLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+  .stat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+  .stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .stat-count{font-size:26px;font-weight:800;color:var(--text);line-height:1;}
+  .stat-label{font-size:12px;color:var(--text2);font-weight:700;}
+  .stat-card.a .stat-icon{background:var(--c-sky-pale);color:var(--c-sky-deep);}
+  .stat-card.b .stat-icon{background:var(--c-green-pale);color:var(--c-green-deep);}
+  .stat-card.c .stat-icon{background:var(--c-purple-pale);color:var(--c-purple-deep);}
+  .stat-card.d .stat-icon{background:var(--c-amber-pale);color:var(--c-amber-deep);}
+  @media (max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<div class="navbar dark"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <button class="navbar-menu-btn" id="navMenuBtn" title="เมนู" onclick="toggleSidebar(event)"><i data-lucide="menu" style="width:18px;height:18px"></i></button>
+    <div class="navbar-mark"><i data-lucide="shield-check" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-LearnLab</div><div class="navbar-subtitle">เจ้าหน้าที่</div></div>
+  </div>
+  <div class="navbar-user" id="navbarUser"><span id="userLabel"></span><img id="userAvatar" class="navbar-avatar" alt="บัญชีผู้ใช้"><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></div>
+<div class="role-switch" id="roleSwitch"></div>
+
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="shell">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">แดชบอร์ดระบบ</div>
+      <div class="page-sub">ภาพรวมผู้ใช้งานและหลักสูตรทั้งหมดในระบบ</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card a"><div class="stat-icon"><i data-lucide="users" style="width:18px;height:18px"></i></div><div class="stat-count" id="statUsers">0</div><div class="stat-label">ผู้ใช้งานทั้งหมด</div></div>
+      <div class="stat-card b"><div class="stat-icon"><i data-lucide="book-open" style="width:18px;height:18px"></i></div><div class="stat-count" id="statCourses">0</div><div class="stat-label">หลักสูตรทั้งหมด</div></div>
+      <div class="stat-card c"><div class="stat-icon"><i data-lucide="pen-tool" style="width:18px;height:18px"></i></div><div class="stat-count" id="statInstructors">0</div><div class="stat-label">ผู้สร้างหลักสูตร</div></div>
+      <div class="stat-card d"><div class="stat-icon"><i data-lucide="book-marked" style="width:18px;height:18px"></i></div><div class="stat-count" id="statEnrollments">0</div><div class="stat-label">การสมัครอบรมทั้งหมด</div></div>
+    </div>
+
+    <div class="card">
+      <div class="form-section-title" style="margin-bottom:10px;"><i data-lucide="info" style="width:16px;height:16px;color:var(--accent)"></i>เริ่มต้นใช้งาน</div>
+      <p class="hint">ไปที่เมนู "หลักสูตรการอบรม" เพื่อดูและจัดการหลักสูตรทั้งหมด หรือเมนู "ผู้ใช้งาน" เพื่อค้นหาและมอบสิทธิ์ผู้สร้างหลักสูตร/เจ้าหน้าที่ให้ผู้ใช้คนอื่น</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script src="shared/menu.js"></script>
+<script src="js/admin-dashboard.js"></script>
+</body>
+</html>

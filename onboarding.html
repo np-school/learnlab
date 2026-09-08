@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กรอกข้อมูลส่วนตัว – NP-LearnLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="shared/styles.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .onb-wrap{max-width:640px;margin:0 auto;padding:36px 20px 60px;}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<div id="toast"></div>
+
+<header class="navbar blue"><div class="navbar-inner">
+  <div class="navbar-brand">
+    <div class="navbar-mark"><i data-lucide="graduation-cap" style="width:20px;height:20px"></i></div>
+    <div><div class="navbar-title">NP-LearnLab</div><div class="navbar-subtitle">ตั้งค่าบัญชีผู้ใช้</div></div>
+  </div>
+  <div class="navbar-user" id="navbarUser"><span id="userLabel"></span><img id="userAvatar" class="navbar-avatar" alt="บัญชีผู้ใช้"><button class="navbar-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:16px;height:16px"></i></button></div>
+</div></header>
+
+<div class="onb-wrap">
+  <div class="form-section">
+    <div class="form-section-title"><i data-lucide="user-plus" style="width:17px;height:17px;color:var(--accent)"></i>กรอกข้อมูลส่วนตัว (ครั้งแรกเท่านั้น)</div>
+    <p class="hint" style="margin-bottom:16px;">ข้อมูลนี้จะใช้แสดงบนใบเกียรติบัตรและประวัติการอบรมของคุณ กรอกให้ครบถ้วนก่อนเริ่มใช้งาน</p>
+    <div class="form-grid">
+      <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="fName" placeholder="เช่น นายสมชาย ใจดี"></div>
+      <div class="field"><label>เบอร์โทรศัพท์</label><input id="fPhone" placeholder="0812345678"></div>
+      <div class="field"><label>หน่วยงาน / โรงเรียน</label><input id="fOrg" placeholder="เช่น โรงเรียนหนองกี่พิทยาคม"></div>
+      <div class="field"><label>ตำแหน่ง</label><input id="fPosition" placeholder="เช่น ครู, นักเรียน, บุคคลทั่วไป"></div>
+    </div>
+    <button class="btn-primary" style="margin-top:20px;" onclick="saveProfile()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกและเริ่มใช้งาน</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="shared/firebase-init.js"></script>
+<script src="shared/auth-guard.js"></script>
+<script>
+  let currentUser = null;
+  auth.onAuthStateChanged(user => {
+    if (!user) { window.location.href = "index.html"; return; }
+    currentUser = user;
+    ensureUserProfile(user).then(profile => {
+      if (profile.onboarded) { window.location.href = "dashboard.html"; return; }
+      fillNavbarUser(user);
+      document.getElementById("fName").value = profile.name || user.displayName || "";
+      hideLoading();
+    });
+  });
+
+  function saveProfile() {
+    const name = document.getElementById("fName").value.trim();
+    if (!name) { showToast("กรุณากรอกชื่อ-นามสกุล", "error"); return; }
+    const data = {
+      name,
+      phone: document.getElementById("fPhone").value.trim(),
+      organization: document.getElementById("fOrg").value.trim(),
+      position: document.getElementById("fPosition").value.trim(),
+      onboarded: true
+    };
+    db.collection("users").doc(currentUser.uid).update(data).then(() => {
+      window.location.href = "dashboard.html";
+    }).catch(err => showToast("บันทึกไม่สำเร็จ: " + err.message, "error"));
+  }
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
