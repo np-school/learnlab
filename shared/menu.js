@@ -68,7 +68,24 @@ function renderShell(group, activeHref, profile) {
       const active = it.href === activeHref ? "active" : "";
       return `<a class="sidebar-btn ${active}" href="${it.href}"><i data-lucide="${it.icon}" style="width:18px;height:18px"></i>${it.label}</a>`;
     }).join("");
-    sidebarEl.innerHTML = `<button class="sidebar-close-btn" onclick="closeSidebar()"><i data-lucide="x" style="width:16px;height:16px"></i></button>${items}`;
+
+    const name = (profile && profile.name) || "";
+    const email = (profile && profile.email) || "";
+    const photo = (profile && profile.photoURL) || "";
+    const footer = `
+      <div class="sidebar-footer">
+        <img src="${photo}" alt="">
+        <div class="sidebar-footer-body">
+          <div class="sidebar-footer-name">${name || email}</div>
+          <div class="sidebar-footer-email">${email}</div>
+        </div>
+        <button class="sidebar-footer-logout" onclick="signOutUser()" title="ออกจากระบบ"><i data-lucide="log-out" style="width:15px;height:15px"></i></button>
+      </div>`;
+
+    sidebarEl.innerHTML =
+      `<button class="sidebar-close-btn" onclick="closeSidebar()"><i data-lucide="x" style="width:16px;height:16px"></i></button>` +
+      `<div class="sidebar-group-label">${menu.label}</div>` +
+      items + footer;
   }
 
   if (window.lucide) lucide.createIcons();

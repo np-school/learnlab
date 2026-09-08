@@ -16,6 +16,7 @@
 <body>
 
 <div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--text2);font-size:14px;font-weight:700;">กำลังตรวจสอบสิทธิ์...</p></div>
+<script>if(sessionStorage.getItem("nplab_profile")){document.getElementById("loadingOverlay").classList.add("hide");}</script>
 <div id="toast"></div>
 
 <div class="navbar dark"><div class="navbar-inner">

@@ -82,21 +82,37 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .navbar-login:hover{background:var(--bg-alt);}
 
 /* ── role switcher (แสดงเมื่อผู้ใช้มีมากกว่า 1 บทบาท) ── */
-.role-switch{display:flex;gap:6px;padding:10px 16px 0;flex-wrap:wrap;max-width:1320px;margin:0 auto;}
-.role-switch a{font-size:12px;font-weight:700;padding:7px 14px;border-radius:100px;background:#fff;border:1px solid var(--border);color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;}
-.role-switch a.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.role-switch-wrap{background:#fff;border-bottom:1px solid var(--border);}
+.role-switch{display:flex;gap:4px;padding:10px 20px;flex-wrap:wrap;max-width:1320px;margin:0 auto;background:var(--bg-alt);border-radius:100px;width:fit-content;margin-top:10px;margin-bottom:10px;}
+.role-switch a{font-size:12.5px;font-weight:700;padding:8px 16px;border-radius:100px;background:transparent;color:var(--text2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:background .15s,color .15s;}
+.role-switch a:hover{color:var(--text);}
+.role-switch a.active{background:#fff;color:var(--accent-dark);box-shadow:0 1px 4px rgba(0,0,0,.08);}
 
 /* ── shell / sidebar ── */
 .shell{max-width:1320px;margin:0 auto;display:flex;align-items:flex-start;gap:0;}
-.sidebar{width:236px;flex-shrink:0;background:#fff;border-left:1px solid var(--border);min-height:calc(100vh - 62px);padding:18px 12px;position:sticky;top:62px;display:flex;flex-direction:column;gap:3px;}
-.sidebar-group-label{font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:14px 12px 6px;}
+.sidebar{width:250px;flex-shrink:0;background:#fff;border-left:1px solid var(--border);min-height:calc(100vh - 62px);padding:18px 14px;position:sticky;top:62px;display:flex;flex-direction:column;gap:2px;}
+.sidebar-group-label{font-size:10.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:14px 12px 8px;}
 .sidebar-group-label:first-child{padding-top:4px;}
-.sidebar-btn{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;color:var(--text2);text-decoration:none;font-weight:700;font-size:13.5px;border:none;background:none;width:100%;text-align:right;cursor:pointer;font-family:inherit;}
+.sidebar-btn{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;color:var(--text2);text-decoration:none;font-weight:700;font-size:13.5px;border:none;background:none;width:100%;text-align:right;cursor:pointer;font-family:inherit;position:relative;transition:background .15s,color .15s,transform .1s;}
+.sidebar-btn i{flex-shrink:0;color:var(--text3);transition:color .15s;}
 .sidebar-btn:hover{background:var(--bg-alt);color:var(--text);}
+.sidebar-btn:hover i{color:var(--text2);}
+.sidebar-btn:active{transform:scale(.98);}
 .sidebar-btn.active{background:var(--accent-tint);color:var(--accent-dark);}
+.sidebar-btn.active i{color:var(--accent);}
+.sidebar-btn.active::before{content:"";position:absolute;right:0;top:8px;bottom:8px;width:3px;border-radius:100px;background:var(--accent);}
 .sidebar-close-btn{display:none;}
 #sidebarOverlay{display:none;}
 .content{flex:1;min-width:0;padding:24px 24px 60px;border-right:1px solid var(--border);min-height:calc(100vh - 62px);}
+
+/* ── sidebar footer: mini user card ── */
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;padding-left:8px;padding-right:8px;}
+.sidebar-footer img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--bg-alt);flex-shrink:0;}
+.sidebar-footer-body{flex:1;min-width:0;}
+.sidebar-footer-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-footer-email{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-footer-logout{background:var(--bg-alt);border:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);flex-shrink:0;}
+.sidebar-footer-logout:hover{background:var(--c-red-pale);color:var(--c-red-deep);}
 
 @media (max-width:900px){
   .navbar-menu-btn{display:flex;}

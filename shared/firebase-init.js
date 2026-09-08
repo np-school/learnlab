@@ -4,13 +4,12 @@
 // (Firebase Console → Project settings → General → Your apps → Web app)
 // =========================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBQ_9K3feSQwWW5fSUMtXKzhZRvXcH1-6U",
-  authDomain: "np-learnlab.firebaseapp.com",
-  projectId: "np-learnlab",
-  storageBucket: "np-learnlab.firebasestorage.app",
-  messagingSenderId: "111321772789",
-  appId: "1:111321772789:web:61571cc5bb0c467aa24bbc",
-  measurementId: "G-4TN93P09P0"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
