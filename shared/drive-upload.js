@@ -53,8 +53,21 @@ function ensureDriveToken() {
       driveTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
       resolve(driveAccessToken);
     };
+    // เบราว์เซอร์บางตัว (โดยเฉพาะ in-app browser ของ LINE/Facebook หรือมี popup blocker)
+    // จะปิดกั้นหน้าต่าง consent แล้ว error_callback จะถูกเรียกแทน onload ปกติ
+    driveTokenClient.error_callback = (err) => {
+      reject(new Error(
+        "เปิดหน้าต่างยินยอม Google ไม่ได้ (ถูกเบราว์เซอร์บล็อก popup) " +
+        "กรุณาอนุญาต popup ให้เว็บไซต์นี้ หรือเปิดหน้านี้ในเบราว์เซอร์ปกติ " +
+        "(ไม่ใช่ในแอป LINE/Facebook/Messenger) แล้วลองอัปโหลดใหม่อีกครั้ง"
+      ));
+    };
     // ครั้งแรกให้ผู้ใช้กดยินยอม (consent) ครั้งต่อไปขอ token เงียบๆ ถ้ายังไม่หมดอายุ session
-    driveTokenClient.requestAccessToken({ prompt: driveAccessToken ? "" : "consent" });
+    try {
+      driveTokenClient.requestAccessToken({ prompt: driveAccessToken ? "" : "consent" });
+    } catch (e) {
+      reject(new Error("เปิดหน้าต่างยินยอม Google ไม่ได้: " + e.message));
+    }
   });
 }
 
