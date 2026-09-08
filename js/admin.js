@@ -55,6 +55,10 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('appShell').style.display = 'flex';
     document.getElementById('userLabel').textContent = user.email;
     loadData();
+    // รองรับลิงก์ตรงจากเมนู "เจ้าหน้าที่" ในหน้าสมาชิก (admin.html?view=users เป็นต้น)
+    // ให้เปิดหน้าที่ต้องการได้ทันทีโดยไม่ต้องเข้าหน้าแรกเจ้าหน้าที่ก่อน
+    var qView = new URLSearchParams(location.search).get('view');
+    if (['dashboard', 'courses', 'users', 'personnel'].indexOf(qView) > -1) goToAdminView(qView);
   });
 });
 
