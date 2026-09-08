@@ -27,12 +27,13 @@
 <div class="shell">
   <div class="sidebar" id="sidebar"></div>
   <script>try{if(localStorage.getItem('nplab_sidebar_collapsed')==='1')document.getElementById('sidebar').classList.add('collapsed');}catch(e){}</script>
-  <div class="content" style="max-width:760px;">
+  <div class="content" style="max-width:820px;">
     <div class="page-header">
       <div class="page-title" id="pageTitle">สร้างหลักสูตรใหม่</div>
-      <div class="page-sub">กรอกข้อมูลพื้นฐานของหลักสูตร — รายละเอียดเนื้อหา/บทเรียนจะเพิ่มในภายหลัง</div>
+      <div class="page-sub">ขั้นที่ 1: กรอกข้อมูลพื้นฐานแล้วบันทึก — ขั้นที่ 2: เพิ่มเนื้อหา (ข้อความ/เอกสาร) แล้วจัดลำดับก่อนหลังได้</div>
     </div>
 
+    <!-- ── ขั้นที่ 1: ข้อมูลหลักสูตร ── -->
     <div class="form-section">
       <div class="form-section-title"><i data-lucide="book-open" style="width:17px;height:17px;color:var(--accent)"></i>ข้อมูลหลักสูตร</div>
       <div class="form-grid">
@@ -47,19 +48,95 @@
           </select>
         </div>
       </div>
-      <button class="btn-primary" style="margin-top:18px;" onclick="saveCourse()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกหลักสูตร</button>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="saveCourse()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกข้อมูลหลักสูตร</button>
+        <button class="btn-secondary" id="finishBtn" style="display:none;" onclick="finishEditing()"><i data-lucide="check" style="width:15px;height:15px"></i>เสร็จสิ้น กลับไปหลักสูตรของฉัน</button>
+      </div>
     </div>
 
-    <div class="hint" style="margin-top:14px;">หมายเหตุ: ระบบจัดการบทเรียน เนื้อหา และแบบทดสอบภายในหลักสูตรจะเพิ่มในเวอร์ชันถัดไป</div>
+    <!-- ── ขั้นที่ 2: เนื้อหาหลักสูตร ── -->
+    <div class="form-section" style="margin-top:18px;">
+      <div class="form-section-title"><i data-lucide="layers" style="width:17px;height:17px;color:var(--accent)"></i>เนื้อหาหลักสูตร</div>
+      <div class="hint" id="contentLockedHint">บันทึกข้อมูลหลักสูตรด้านบนก่อน 1 ครั้ง เพื่อเริ่มเพิ่มเนื้อหาได้</div>
+
+      <div id="contentBody" style="display:none;">
+        <div id="lessonList" class="lesson-list"></div>
+        <div class="lesson-add-row">
+          <button class="btn-secondary" onclick="openLessonModal('text')"><i data-lucide="type" style="width:15px;height:15px"></i>เพิ่มเนื้อหาข้อความ</button>
+          <button class="btn-secondary" onclick="openLessonModal('document')"><i data-lucide="file-up" style="width:15px;height:15px"></i>เพิ่มเอกสารแนบ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── โมดัลเพิ่ม/แก้ไขเนื้อหา ── -->
+<div class="modal-overlay" id="lessonModal">
+  <div class="modal-box wide">
+    <h3 id="lessonModalTitle">เพิ่มเนื้อหาข้อความ</h3>
+
+    <div class="field full" style="margin-bottom:14px;">
+      <label>หัวข้อเนื้อหา <span class="req">*</span></label>
+      <input id="lessonTitle" placeholder="เช่น บทที่ 1: แนะนำหลักสูตร">
+    </div>
+
+    <!-- เนื้อหาข้อความ -->
+    <div id="lessonTextBlock">
+      <label style="font-size:12.5px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">เนื้อหา</label>
+      <div class="editor-toolbar">
+        <button type="button" onclick="fmt('bold')" title="ตัวหนา"><b>B</b></button>
+        <button type="button" onclick="fmt('italic')" title="ตัวเอียง"><i style="font-style:italic;">I</i></button>
+        <button type="button" onclick="fmt('underline')" title="ขีดเส้นใต้"><u>U</u></button>
+        <span class="editor-sep"></span>
+        <button type="button" onclick="fmtBlock('h2')" title="หัวข้อใหญ่">H2</button>
+        <button type="button" onclick="fmtBlock('h3')" title="หัวข้อย่อย">H3</button>
+        <button type="button" onclick="fmtBlock('p')" title="พารากราฟปกติ">P</button>
+        <span class="editor-sep"></span>
+        <button type="button" onclick="fmt('insertUnorderedList')" title="รายการหัวข้อ"><i data-lucide="list" style="width:14px;height:14px"></i></button>
+        <button type="button" onclick="fmt('insertOrderedList')" title="รายการลำดับเลข"><i data-lucide="list-ordered" style="width:14px;height:14px"></i></button>
+        <button type="button" onclick="fmtBlock('blockquote')" title="คำพูดอ้างอิง"><i data-lucide="quote" style="width:14px;height:14px"></i></button>
+        <span class="editor-sep"></span>
+        <button type="button" onclick="fmtLink()" title="แทรกลิงก์"><i data-lucide="link" style="width:14px;height:14px"></i></button>
+        <button type="button" onclick="fmt('removeFormat')" title="ล้างรูปแบบ"><i data-lucide="eraser" style="width:14px;height:14px"></i></button>
+      </div>
+      <div id="lessonEditor" class="rich-editor" contenteditable="true" data-placeholder="พิมพ์เนื้อหาที่นี่..."></div>
+    </div>
+
+    <!-- เอกสารแนบ -->
+    <div id="lessonDocBlock" style="display:none;">
+      <label style="font-size:12.5px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">ไฟล์เอกสาร</label>
+      <div id="docDropZone" class="doc-drop-zone"
+           onclick="document.getElementById('lessonFileInput').click()"
+           ondragover="event.preventDefault();this.classList.add('dragover');"
+           ondragleave="this.classList.remove('dragover');"
+           ondrop="handleFileDrop(event)">
+        <i data-lucide="upload-cloud" style="width:26px;height:26px"></i>
+        <div style="font-size:13px;font-weight:700;">คลิกเพื่อเลือกไฟล์ หรือวางไฟล์ที่นี่</div>
+        <div class="hint" style="margin-top:3px;">อัปโหลดขึ้น Google Drive (Shared Drive) โดยอัตโนมัติ</div>
+      </div>
+      <input type="file" id="lessonFileInput" style="display:none" onchange="handleFileChosen(event)">
+      <div id="docFileCard" class="doc-file-card" style="display:none;"></div>
+      <div id="docProgressWrap" style="display:none;margin-top:10px;">
+        <div class="progress-track"><div class="progress-fill" id="docProgressFill" style="width:0%"></div></div>
+        <div class="hint" id="docProgressText" style="margin-top:6px;">กำลังอัปโหลด...</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeLessonModal()">ยกเลิก</button>
+      <button class="btn-primary" id="lessonSaveBtn" onclick="saveLesson()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกเนื้อหา</button>
+    </div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="shared/firebase-init.js"></script>
 <script src="shared/auth-guard.js"></script>
 <script src="shared/menu.js"></script>
+<script src="shared/drive-upload.js"></script>
 <script src="js/course-manage.js"></script>
 </body>
 </html>

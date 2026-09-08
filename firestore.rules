@@ -34,6 +34,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if hasRole('instructor') || isStaff();
       allow update, delete: if isStaff() || (hasRole('instructor') && resource.data.ownerUid == request.auth.uid);
+
+      // courses/{id}/lessons/{lessonId} — เนื้อหาข้อความ/เอกสารภายในหลักสูตร
+      // (ไฟล์จริงเก็บบน Google Drive แยกต่างหาก ที่นี่เก็บแค่ metadata/ลำดับ)
+      function isCourseOwner() {
+        return hasRole('instructor') &&
+          get(/databases/$(database)/documents/courses/$(courseId)).data.ownerUid == request.auth.uid;
+      }
+      match /lessons/{lessonId} {
+        allow read: if isSignedIn();
+        allow write: if isStaff() || isCourseOwner();
+      }
     }
 
     // enrollments/{uid_courseId}
