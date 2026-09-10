@@ -2,8 +2,10 @@ let editUser = null;
 let editCourseId = null;
 let lessons = [];          // แคชรายการเนื้อหาของหลักสูตรนี้ เรียงตาม order
 let editingLessonId = null; // null = กำลังเพิ่มใหม่, มีค่า = กำลังแก้ไขรายการเดิม
-let lessonType = "text";    // 'text' | 'document' — ประเภทที่โมดัลกำลังเปิดอยู่
+let lessonType = "text";    // 'text' | 'document' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
 let pendingDriveFile = null; // ผลลัพธ์ไฟล์ที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ
+let quizQuestions = [];      // แคชคำถามแบบทดสอบที่กำลังแก้ไขอยู่ในโมดัล
+                              // แต่ละข้อ: { text, options: [string,...], correct: index }
 
 guardPage(["instructor"], (user, profile) => {
   renderShell("instructor", "course-manage.html", profile);
@@ -36,11 +38,13 @@ function loadCourseBasics() {
 }
 
 function saveCourse() {
+  const code = document.getElementById("cCode").value.trim();
   const title = document.getElementById("cTitle").value.trim();
+  if (!code) { showToast("กรุณากรอกรหัสหลักสูตร", "error"); return; }
   if (!title) { showToast("กรุณากรอกชื่อหลักสูตร", "error"); return; }
 
   const data = {
-    code: document.getElementById("cCode").value.trim(),
+    code,
     title,
     description: document.getElementById("cDesc").value.trim(),
     category: document.getElementById("cCategory").value.trim(),
@@ -113,8 +117,12 @@ function renderLessons() {
   }
   box.innerHTML = lessons.map((l, i) => {
     const isText = l.type === "text";
+    const isQuiz = l.type === "quiz";
+    const icon = isText ? "align-left" : (isQuiz ? "help-circle" : "file-text");
     const metaTxt = isText
       ? (stripHtml(l.content).trim().slice(0, 70) || "ยังไม่มีเนื้อหา")
+      : isQuiz
+      ? `${(l.questions || []).length} คำถาม · ผ่านที่ ${l.passScore != null ? l.passScore : 70}%`
       : (l.fileName || "ไฟล์แนบ");
     return `
     <div class="lesson-item">
@@ -123,7 +131,7 @@ function renderLessons() {
         <button ${i === lessons.length - 1 ? "disabled" : ""} onclick="moveLesson(${i},1)" title="เลื่อนลง"><i data-lucide="chevron-down" style="width:15px;height:15px"></i></button>
       </div>
       <div class="lesson-num">${i + 1}</div>
-      <div class="lesson-icon ${l.type}"><i data-lucide="${isText ? "align-left" : "file-text"}" style="width:16px;height:16px"></i></div>
+      <div class="lesson-icon ${l.type}"><i data-lucide="${icon}" style="width:16px;height:16px"></i></div>
       <div class="lesson-info">
         <div class="lesson-title">${escapeHtml(l.title || "(ไม่มีชื่อ)")}</div>
         <div class="lesson-meta">${escapeHtml(metaTxt)}</div>
@@ -157,12 +165,19 @@ function openLessonModal(type) {
   editingLessonId = null;
   lessonType = type;
   pendingDriveFile = null;
-  document.getElementById("lessonModalTitle").textContent = type === "text" ? "เพิ่มเนื้อหาข้อความ" : "เพิ่มเอกสารแนบ";
+  const titles = { text: "เพิ่มเนื้อหาข้อความ", document: "เพิ่มเอกสารแนบ", quiz: "เพิ่มแบบทดสอบ" };
+  document.getElementById("lessonModalTitle").textContent = titles[type] || "เพิ่มเนื้อหา";
   document.getElementById("lessonTitle").value = "";
   document.getElementById("lessonEditor").innerHTML = "";
   document.getElementById("lessonTextBlock").style.display = type === "text" ? "block" : "none";
   document.getElementById("lessonDocBlock").style.display = type === "document" ? "block" : "none";
+  document.getElementById("lessonQuizBlock").style.display = type === "quiz" ? "block" : "none";
   resetDocUI();
+  if (type === "quiz") {
+    quizQuestions = [];
+    document.getElementById("quizPassScore").value = 70;
+    renderQuizQuestions();
+  }
   document.getElementById("lessonModal").classList.add("open");
   lucide.createIcons();
 }
@@ -176,13 +191,20 @@ function editLesson(id) {
     ? { id: l.fileId, name: l.fileName, webViewLink: l.fileUrl, mimeType: l.fileMimeType, iconLink: l.fileIconLink }
     : null;
 
-  document.getElementById("lessonModalTitle").textContent = l.type === "text" ? "แก้ไขเนื้อหาข้อความ" : "แก้ไขเอกสารแนบ";
+  const titles = { text: "แก้ไขเนื้อหาข้อความ", document: "แก้ไขเอกสารแนบ", quiz: "แก้ไขแบบทดสอบ" };
+  document.getElementById("lessonModalTitle").textContent = titles[l.type] || "แก้ไขเนื้อหา";
   document.getElementById("lessonTitle").value = l.title || "";
   document.getElementById("lessonEditor").innerHTML = l.content || "";
   document.getElementById("lessonTextBlock").style.display = l.type === "text" ? "block" : "none";
   document.getElementById("lessonDocBlock").style.display = l.type === "document" ? "block" : "none";
+  document.getElementById("lessonQuizBlock").style.display = l.type === "quiz" ? "block" : "none";
   resetDocUI();
   if (l.type === "document" && l.fileName) showDocFileCard(pendingDriveFile);
+  if (l.type === "quiz") {
+    quizQuestions = JSON.parse(JSON.stringify(l.questions || []));
+    document.getElementById("quizPassScore").value = l.passScore != null ? l.passScore : 70;
+    renderQuizQuestions();
+  }
 
   document.getElementById("lessonModal").classList.add("open");
   lucide.createIcons();
@@ -202,13 +224,25 @@ function saveLesson() {
     const html = document.getElementById("lessonEditor").innerHTML.trim();
     if (!html) { showToast("กรุณากรอกเนื้อหาข้อความ", "error"); return; }
     data.content = html;
-  } else {
+  } else if (lessonType === "document") {
     if (!pendingDriveFile) { showToast("กรุณาอัปโหลดไฟล์เอกสารก่อนบันทึก", "error"); return; }
     data.fileId = pendingDriveFile.id;
     data.fileName = pendingDriveFile.name;
     data.fileUrl = pendingDriveFile.webViewLink;
     data.fileMimeType = pendingDriveFile.mimeType || "";
     data.fileIconLink = pendingDriveFile.iconLink || "";
+  } else if (lessonType === "quiz") {
+    const passScore = Number(document.getElementById("quizPassScore").value);
+    if (!passScore || passScore < 1 || passScore > 100) { showToast("กรุณากรอกเกณฑ์ผ่านเป็นตัวเลข 1-100", "error"); return; }
+    if (!quizQuestions.length) { showToast("กรุณาเพิ่มอย่างน้อย 1 คำถาม", "error"); return; }
+    for (let i = 0; i < quizQuestions.length; i++) {
+      const q = quizQuestions[i];
+      if (!q.text.trim()) { showToast(`กรุณากรอกคำถามข้อที่ ${i + 1}`, "error"); return; }
+      if (q.options.length < 2 || q.options.some(o => !o.trim())) { showToast(`กรุณากรอกตัวเลือกให้ครบข้อที่ ${i + 1}`, "error"); return; }
+      if (q.correct == null || q.correct < 0 || q.correct >= q.options.length) { showToast(`กรุณาเลือกเฉลยข้อที่ ${i + 1}`, "error"); return; }
+    }
+    data.questions = quizQuestions;
+    data.passScore = passScore;
   }
 
   const isNew = !editingLessonId;
@@ -231,6 +265,78 @@ function deleteLesson(id) {
     showToast("ลบเนื้อหาเรียบร้อย", "success");
     loadLessons();
   }).catch(err => showToast("ลบไม่สำเร็จ: " + err.message, "error"));
+}
+
+// ---------------------------------------------------------
+// ตัวสร้างแบบทดสอบ (courses/{id}/lessons/{lessonId} type='quiz')
+// quizQuestions: [{ text, options:[string,...], correct: index }]
+// เกณฑ์ผ่าน (passScore) เก็บแยกไว้ที่ตัวหลักสูตร/บทเรียน ผู้เรียนทำซ้ำได้ไม่จำกัดครั้ง
+// (การตรวจ/บันทึกคะแนนจริงจะอยู่ในหน้าเรียน course-player ที่จะเพิ่มภายหลัง)
+// ---------------------------------------------------------
+function addQuizQuestion() {
+  quizQuestions.push({ text: "", options: ["", ""], correct: 0 });
+  renderQuizQuestions();
+}
+
+function removeQuizQuestion(qi) {
+  quizQuestions.splice(qi, 1);
+  renderQuizQuestions();
+}
+
+function updateQuizQuestionText(qi, val) {
+  quizQuestions[qi].text = val;
+}
+
+function addQuizOption(qi) {
+  if (quizQuestions[qi].options.length >= 6) { showToast("เพิ่มตัวเลือกได้สูงสุด 6 ข้อ", "error"); return; }
+  quizQuestions[qi].options.push("");
+  renderQuizQuestions();
+}
+
+function removeQuizOption(qi, oi) {
+  const q = quizQuestions[qi];
+  if (q.options.length <= 2) { showToast("ต้องมีอย่างน้อย 2 ตัวเลือก", "error"); return; }
+  q.options.splice(oi, 1);
+  if (q.correct === oi) q.correct = 0;
+  else if (q.correct > oi) q.correct -= 1;
+  renderQuizQuestions();
+}
+
+function updateQuizOptionText(qi, oi, val) {
+  quizQuestions[qi].options[oi] = val;
+}
+
+function setQuizCorrect(qi, oi) {
+  quizQuestions[qi].correct = oi;
+}
+
+function renderQuizQuestions() {
+  const box = document.getElementById("quizQuestionList");
+  if (!quizQuestions.length) {
+    box.innerHTML = `<div class="empty-state">
+        <i data-lucide="help-circle" style="width:26px;height:26px;color:var(--text3)"></i>
+        <div style="margin-top:8px;">ยังไม่มีคำถาม — กดปุ่ม "เพิ่มคำถาม" ด้านล่างเพื่อเริ่ม</div>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+  box.innerHTML = quizQuestions.map((q, qi) => `
+    <div class="quiz-question-card">
+      <div class="quiz-question-head">
+        <span class="qnum">คำถามข้อที่ ${qi + 1}</span>
+        <button type="button" class="icon-btn danger" onclick="removeQuizQuestion(${qi})" title="ลบคำถามนี้"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+      </div>
+      <input type="text" placeholder="พิมพ์คำถาม..." value="${escapeHtml(q.text)}"
+        style="margin-bottom:10px;" oninput="updateQuizQuestionText(${qi}, this.value)">
+      ${q.options.map((opt, oi) => `
+        <div class="quiz-option-row">
+          <input type="radio" name="qcorrect_${qi}" ${q.correct === oi ? "checked" : ""} onchange="setQuizCorrect(${qi}, ${oi})" title="ตั้งเป็นเฉลย">
+          <input type="text" placeholder="ตัวเลือกที่ ${oi + 1}" value="${escapeHtml(opt)}" oninput="updateQuizOptionText(${qi}, ${oi}, this.value)">
+          ${q.options.length > 2 ? `<button type="button" class="icon-btn danger" onclick="removeQuizOption(${qi},${oi})" title="ลบตัวเลือกนี้"><i data-lucide="x" style="width:14px;height:14px"></i></button>` : ""}
+        </div>`).join("")}
+      <button type="button" class="btn-secondary" style="margin-top:4px;padding:6px 12px;font-size:12.5px;" onclick="addQuizOption(${qi})"><i data-lucide="plus" style="width:13px;height:13px"></i>เพิ่มตัวเลือก</button>
+    </div>`).join("");
+  lucide.createIcons();
 }
 
 // ---------------------------------------------------------

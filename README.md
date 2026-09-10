@@ -48,13 +48,38 @@ users/{uid}          → { name, email, phone, organization, position,
                           onboarded: boolean, createdAt }
 courses/{id}          → { title, description, category, status: 'draft'|'published',
                           ownerUid, ownerName, createdAt, updatedAt }
-courses/{id}/lessons/{lessonId} → { title, type: 'text'|'document', order: number,
+courses/{id}/lessons/{lessonId} → { title, type: 'text'|'document'|'quiz', order: number,
                           content?,                       // HTML ที่ตกแต่งแล้ว (เฉพาะ type='text')
                           fileId?, fileName?, fileUrl?,    // ลิงก์ webViewLink บน Google Drive
                           fileMimeType?, fileIconLink?,    // (เฉพาะ type='document')
+                          questions?, passScore?,          // เฉพาะ type='quiz' (ดูรายละเอียดด้านล่าง)
                           createdAt, updatedAt }
 enrollments/{uid_courseId} → { uid, courseId, courseTitle, status: 'in_progress'|'completed',
-                          progress: 0-100, certificateUrl?, enrolledAt, completedAt? }
+                          progress: 0-100, quizAttempts?, certificateUrl?, enrolledAt, completedAt? }
+```
+
+### แบบทดสอบ (quiz lesson)
+
+ผู้สอนเลือกได้เองว่าจะวางแบบทดสอบไว้ตรงไหนในหลักสูตร — จะทำเป็นชุดเดียวท้ายหลักสูตร (final exam)
+หรือแนบท้ายแต่ละบทเรียนก็ได้ เพราะ quiz เป็นแค่ lesson อีกประเภทหนึ่งที่จัดลำดับ/ย้ายตำแหน่งได้เหมือน
+เนื้อหาข้อความ/เอกสารแนบทุกประการ
+
+```
+courses/{id}/lessons/{lessonId}  (type: 'quiz')
+  questions: [
+    { text: string, options: string[2-6], correct: number }  // index ของตัวเลือกที่ถูก
+  ]
+  passScore: number  // เกณฑ์ผ่านเป็น % (ตั้งได้ต่อชุด ค่าเริ่มต้น 70)
+```
+
+สร้าง/แก้ไขได้ในหน้า `course-manage.html` (ปุ่ม "เพิ่มแบบทดสอบ")
+
+**เงื่อนไขจบหลักสูตร (ออกแบบไว้แล้ว รอเชื่อมกับหน้าเรียนจริง):**
+- ผู้เรียนทำแบบทดสอบซ้ำได้ไม่จำกัดจำนวนครั้ง จนกว่าจะได้คะแนนถึง `passScore` ของชุดนั้น
+- หลักสูตรจะนับว่า "เรียนจบ" (`enrollments.status = 'completed'`) เมื่อ quiz-type lesson **ทุกชุด**
+  ในหลักสูตรนั้นมีการทำแล้วผ่านเกณฑ์อย่างน้อย 1 ครั้ง (บันทึกไว้ที่ `enrollments.quizAttempts`)
+- ที่ยังไม่ได้ทำในรอบนี้ (ตามที่ตกลงกันไว้ ยังไม่เร่งสร้าง): หน้า **course-player** ที่ผู้เรียนจะเห็นเนื้อหา
+  ทำแบบทดสอบ และหน้านี้เองที่จะเป็นคนบันทึก `quizAttempts` + คำนวณ `progress`/`status` ตามกติกาข้างต้น
 ```
 
 > ไฟล์เอกสารจริงของเนื้อหาแบบ `document` ไม่ได้เก็บใน Firestore — อัปโหลดขึ้น **Google Drive
@@ -113,10 +138,14 @@ event ดาวน์โหลดไฟล์นั้นแล้วอัป�
 
 ## จุดที่ควรต่อยอด
 
-- **course-manage.html** ตอนนี้มีระบบเพิ่ม/แก้ไข/ลบ/จัดลำดับเนื้อหาแบบข้อความ (ตกแต่งได้) และเอกสารแนบ
-  (อัปโหลดขึ้น Google Drive) แล้ว — ยังไม่มีแบบทดสอบ (quiz) ภายในหลักสูตร และยังไม่มีหน้าเรียน
-  (course player) ที่ผู้เรียนจะเห็นเนื้อหาเหล่านี้จริง — เป็นจุดต่อยอดถัดไป
+- **course-manage.html** ตอนนี้มีระบบเพิ่ม/แก้ไข/ลบ/จัดลำดับเนื้อหาแบบข้อความ (ตกแต่งได้), เอกสารแนบ
+  (อัปโหลดขึ้น Google Drive), และแบบทดสอบ (quiz พร้อมเกณฑ์ผ่านต่อชุด) แล้ว — แต่ **ยังไม่มีหน้าเรียน
+  (course player)** ที่ผู้เรียนจะเห็นเนื้อหา/ทำแบบทดสอบจริง — เป็นจุดต่อยอดถัดไปที่สำคัญที่สุด
+- **course-player (ยังไม่สร้าง)**: ต้องดึง `courses/{id}/lessons` มาแสดงทีละบท, ให้ทำ quiz แบบทำซ้ำได้
+  ไม่จำกัดครั้ง, บันทึกผลแต่ละครั้งไว้ที่ `enrollments.quizAttempts`, แล้วเช็คว่า quiz-type lesson
+  ทุกชุดผ่านเกณฑ์หรือยัง — ถ้าผ่านครบให้ตั้ง `status = 'completed'` (รายละเอียดกติกาอยู่ในหัวข้อ
+  "แบบทดสอบ (quiz lesson)" ด้านบน)
 - **เกียรติบัตร**: ยังไม่มีระบบออกเกียรติบัตรอัตโนมัติ ต้องเพิ่ม logic อัปเดต `certificateUrl` เมื่อ
-  `progress` = 100 (คล้ายรูปแบบอัปโหลดไฟล์ผ่าน Cloud Function ของโปรเจกต์ NP-TCAS Verified)
-- **ความคืบหน้า (progress)**: ตอนนี้ยังไม่มีหน้าเรียนจริงที่อัปเดตค่า progress — เป็นฟิลด์ตัวเลขเปล่าไว้ก่อน
-  รอออกแบบหน้าคอร์สเพลเยอร์/บทเรียนในเวอร์ชันถัดไป (จะดึงเนื้อหาจาก `courses/{id}/lessons` ที่เพิ่งเพิ่ม)
+  `status` เปลี่ยนเป็น `completed` (คล้ายรูปแบบอัปโหลดไฟล์ผ่าน Cloud Function ของโปรเจกต์ NP-TCAS Verified)
+- **ความคืบหน้า (progress)**: ยังไม่มีหน้าเรียนจริงที่อัปเดตค่านี้ — เป็นฟิลด์ตัวเลขเปล่าไว้ก่อน
+  แนะนำให้คำนวณจากสัดส่วนบทเรียน/quiz ที่ผ่านแล้วเทียบกับทั้งหมดในหลักสูตร

@@ -215,6 +215,7 @@ tr:last-child td{border-bottom:none;}
 .lesson-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .lesson-icon.text{background:var(--accent-tint);color:var(--accent);}
 .lesson-icon.document{background:var(--c-sky-pale);color:var(--c-sky-deep);}
+.lesson-icon.quiz{background:var(--c-purple-pale);color:var(--c-purple-deep);}
 .lesson-info{flex:1;min-width:0;}
 .lesson-title{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .lesson-meta{font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
@@ -242,6 +243,14 @@ tr:last-child td{border-bottom:none;}
 .doc-drop-zone:hover,.doc-drop-zone.dragover{border-color:var(--accent);background:var(--accent-tint);}
 .doc-drop-zone i{color:var(--text3);margin-bottom:6px;}
 .doc-file-card{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-top:10px;}
+
+.quiz-question-card{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.quiz-question-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.quiz-question-head .qnum{font-size:12.5px;font-weight:800;color:var(--text3);}
+.quiz-option-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.quiz-option-row input[type="text"]{flex:1;}
+.quiz-option-row input[type="radio"]{width:17px;height:17px;flex-shrink:0;accent-color:var(--c-purple-deep);}
+.quiz-add-question-row{display:flex;justify-content:center;margin-top:4px;}
 
 /* ── course card ── */
 .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;}
