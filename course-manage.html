@@ -46,7 +46,11 @@
               <button type="button" class="btn-secondary" onclick="document.getElementById('coverFileInput').click()"><i data-lucide="upload" style="width:14px;height:14px"></i>เลือกรูปปก</button>
               <button type="button" class="btn-secondary" id="coverRemoveBtn" style="display:none;" onclick="removeCoverImage()"><i data-lucide="trash-2" style="width:14px;height:14px"></i>ลบรูปปก</button>
             </div>
-            <div class="hint">แนะนำอัตราส่วน 16:9 ขนาดไม่เกิน 5MB (JPG, PNG) — จะแสดงในหน้ารายการหลักสูตรและหน้าเรียน</div>
+            <div class="hint">แนะนำอัตราส่วน 16:9 ขนาดไม่เกิน 5MB (JPG, PNG) — จะแสดงในหน้ารายการหลักสูตรและหน้าเรียน · ไฟล์จะถูกเก็บไว้ที่โฟลเดอร์ Google Drive ของหลักสูตรนี้เหมือนไฟล์เนื้อหาอื่นๆ</div>
+            <div id="coverProgressWrap" style="display:none;">
+              <div class="progress-track"><div class="progress-fill" id="coverProgressFill" style="width:0%"></div></div>
+              <div class="hint" id="coverProgressText" style="margin-top:4px;">กำลังอัปโหลด...</div>
+            </div>
           </div>
           <input type="file" id="coverFileInput" accept="image/*" style="display:none" onchange="handleCoverFileChosen(event)">
         </div>

@@ -93,16 +93,18 @@ exports.uploadToDrive = onObjectFinalized(
 
     if (!filePath.startsWith(UPLOAD_PREFIX)) return; // ไม่ใช่ path ที่เราสนใจ ข้ามไป
 
-    // รูปแบบ path: pending-uploads/{jobId}/{courseId}/{originalFileName}
+    // รูปแบบ path: pending-uploads/{jobId}/{courseId}/{kind}/{originalFileName}
     // courseId เป็น "_" หมายถึงไม่ผูกกับหลักสูตรใด (อัปขึ้นโฟลเดอร์รากตามเดิม)
+    // kind: "lesson" = เอกสารแนบเนื้อหา, "cover" = รูปปกหลักสูตร (ทั้งคู่ไปอยู่โฟลเดอร์ Drive ของหลักสูตรเดียวกัน)
     const parts = filePath.slice(UPLOAD_PREFIX.length).split("/");
-    if (parts.length < 3) {
+    if (parts.length < 4) {
       logger.error("รูปแบบ path ไม่ถูกต้อง:", filePath);
       return;
     }
     const jobId = parts[0];
     const courseId = decodeURIComponent(parts[1]);
-    const fileName = parts.slice(2).join("/");
+    const kind = parts[2] === "cover" ? "cover" : "lesson";
+    const fileName = parts.slice(3).join("/");
     const jobRef = admin.firestore().collection("uploadJobs").doc(jobId);
     const bucket = admin.storage().bucket(obj.bucket);
     const storageFile = bucket.file(filePath);
@@ -129,13 +131,31 @@ exports.uploadToDrive = onObjectFinalized(
       const res = await drive.files.create({
         requestBody: { name: fileName, parents: [parentId] },
         media: { mimeType: obj.contentType || "application/octet-stream", body: Readable.from(buffer) },
-        fields: "id,name,webViewLink,webContentLink,mimeType,iconLink,size",
+        fields: "id,name,webViewLink,webContentLink,mimeType,iconLink,thumbnailLink,size",
         supportsAllDrives: true
       });
 
+      const driveFile = res.data;
+
+      // รูปปกหลักสูตร: เปิดสิทธิ์ "ดูได้ทุกคนที่มีลิงก์" เพื่อให้ฝัง <img src="..."> แสดงได้ทันที
+      // (ไฟล์เนื้อหาเนื้อหาอื่น ๆ ยังคงจำกัดสิทธิ์ตามเดิม ต้องเปิดผ่านลิงก์ webViewLink ที่มีการล็อกอิน)
+      if (kind === "cover") {
+        try {
+          await drive.permissions.create({
+            fileId: driveFile.id,
+            requestBody: { role: "reader", type: "anyone" },
+            supportsAllDrives: true
+          });
+        } catch (permErr) {
+          logger.error("ตั้งค่าสิทธิ์เปิดสาธารณะรูปปกไม่สำเร็จ:", permErr);
+        }
+        driveFile.imageUrl = (driveFile.thumbnailLink || "").replace(/=s\d+$/, "=s1600") ||
+          ("https://drive.google.com/uc?export=view&id=" + driveFile.id);
+      }
+
       await jobRef.set({
         status: "done",
-        driveFile: res.data,
+        driveFile,
         finishedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     } catch (err) {

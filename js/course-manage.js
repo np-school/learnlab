@@ -107,16 +107,23 @@ function saveCourse() {
   const saveBtn = document.querySelector('[onclick="saveCourse()"]');
   if (saveBtn) saveBtn.disabled = true;
 
-  uploadPendingCoverIfAny(courseIdForCover)
-    .then(coverUrl => {
-      if (coverUrl) data.coverUrl = coverUrl;
-      else if (coverRemoved) data.coverUrl = firebase.firestore.FieldValue.delete();
-      return ref.set(data, { merge: true });
+  // บันทึกข้อมูลพื้นฐานก่อน เพื่อให้เอกสารหลักสูตรมีอยู่จริงแล้ว
+  // (Cloud Function ต้องอ่านเอกสารนี้เพื่อหา/สร้างโฟลเดอร์ Drive ของหลักสูตรนี้ตอนอัปโหลดรูปปก)
+  ref.set(data, { merge: true })
+    .then(() => uploadPendingCoverIfAny(courseIdForCover))
+    .then(driveFile => {
+      if (driveFile) {
+        return ref.set({ coverUrl: driveFile.imageUrl, coverDriveFileId: driveFile.id }, { merge: true });
+      } else if (coverRemoved) {
+        return ref.set({
+          coverUrl: firebase.firestore.FieldValue.delete(),
+          coverDriveFileId: firebase.firestore.FieldValue.delete()
+        }, { merge: true });
+      }
     })
     .then(() => {
       showToast("บันทึกข้อมูลหลักสูตรเรียบร้อย", "success");
       document.getElementById("finishBtn").style.display = "inline-flex";
-      existingCoverUrl = coverRemoved ? null : (pendingCoverFile ? existingCoverUrl : existingCoverUrl);
       pendingCoverFile = null;
       coverRemoved = false;
       if (isNew) {
@@ -126,22 +133,32 @@ function saveCourse() {
         document.getElementById("pageTitle").textContent = "แก้ไขหลักสูตร";
         unlockContentSection();
         loadLessons();
-      } else {
-        loadCourseBasics();
       }
+      loadCourseBasics(); // โหลดค่า coverUrl ล่าสุดกลับมาแสดง
     })
     .catch(err => showToast("บันทึกไม่สำเร็จ: " + err.message, "error"))
     .finally(() => { if (saveBtn) saveBtn.disabled = false; });
 }
 
-// อัปโหลดรูปปกที่เพิ่งเลือกไว้ (ถ้ามี) ขึ้น Firebase Storage แล้วคืน downloadURL
+// อัปโหลดรูปปกที่เพิ่งเลือกไว้ (ถ้ามี) ขึ้น Google Drive โฟลเดอร์เดียวกับไฟล์เนื้อหาของหลักสูตรนี้
+// ผ่าน pipeline เดียวกับ shared/drive-upload.js (kind="cover") แล้วคืน driveFile ที่มี imageUrl
 // ถ้าไม่มีไฟล์ใหม่ คืน Promise<null> (ไม่แตะรูปปกเดิม)
 function uploadPendingCoverIfAny(courseId) {
   if (!pendingCoverFile) return Promise.resolve(null);
-  const ext = (pendingCoverFile.name.split(".").pop() || "jpg").toLowerCase();
-  const path = "course-covers/" + courseId + "/cover_" + Date.now() + "." + ext;
-  const ref = storage.ref(path);
-  return ref.put(pendingCoverFile).then(() => ref.getDownloadURL());
+  document.getElementById("coverProgressWrap").style.display = "block";
+  document.getElementById("coverProgressFill").style.width = "0%";
+  document.getElementById("coverProgressText").textContent = "กำลังอัปโหลดรูปปกขึ้น Google Drive...";
+
+  return uploadFileToDrive(pendingCoverFile, courseId, pct => {
+    document.getElementById("coverProgressFill").style.width = pct + "%";
+    document.getElementById("coverProgressText").textContent = "กำลังอัปโหลด... " + pct + "%";
+  }, "cover").then(driveFile => {
+    document.getElementById("coverProgressWrap").style.display = "none";
+    return driveFile;
+  }).catch(err => {
+    document.getElementById("coverProgressWrap").style.display = "none";
+    throw new Error("อัปโหลดรูปปกไม่สำเร็จ: " + (err.message || err));
+  });
 }
 
 function finishEditing() {
