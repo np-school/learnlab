@@ -27,6 +27,7 @@ function loadCourseBasics() {
   db.collection("courses").doc(editCourseId).get().then(snap => {
     if (!snap.exists) { showToast("ไม่พบหลักสูตรนี้", "error"); return; }
     const c = snap.data();
+    document.getElementById("cCode").value = c.code || "";
     document.getElementById("cTitle").value = c.title || "";
     document.getElementById("cDesc").value = c.description || "";
     document.getElementById("cCategory").value = c.category || "";
@@ -39,6 +40,7 @@ function saveCourse() {
   if (!title) { showToast("กรุณากรอกชื่อหลักสูตร", "error"); return; }
 
   const data = {
+    code: document.getElementById("cCode").value.trim(),
     title,
     description: document.getElementById("cDesc").value.trim(),
     category: document.getElementById("cCategory").value.trim(),
@@ -276,7 +278,7 @@ function uploadDocFile(file) {
   document.getElementById("docProgressText").textContent = "กำลังอัปโหลด " + file.name + "...";
   document.getElementById("lessonSaveBtn").disabled = true;
 
-  uploadFileToDrive(file, pct => {
+  uploadFileToDrive(file, editCourseId, pct => {
     document.getElementById("docProgressFill").style.width = pct + "%";
     document.getElementById("docProgressText").textContent = "กำลังอัปโหลด... " + pct + "%";
   }).then(res => {
