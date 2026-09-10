@@ -15,13 +15,15 @@
 // อัปโหลดไฟล์ 1 ไฟล์: เก็บที่ Storage ชั่วคราว → รอ Cloud Function อัปขึ้น Drive
 // courseId ใช้ให้ Cloud Function รู้ว่าไฟล์นี้เป็นของหลักสูตรไหน เพื่อแยกโฟลเดอร์ปลายทาง
 // (Cloud Function อ่านข้อมูลหลักสูตรจาก Firestore เองด้วย courseId นี้ ไม่เชื่อค่าจากฝั่งเว็บ)
-// kind: "lesson" (ค่าเริ่มต้น) สำหรับเอกสารแนบเนื้อหา, "cover" สำหรับรูปปกหลักสูตร
-//       ทั้งสองแบบไปอยู่ในโฟลเดอร์ Drive ของหลักสูตรเดียวกัน แค่ Cloud Function จะตั้งค่า
-//       การแชร์ของไฟล์ "cover" ให้เปิดดูได้แบบไม่ต้องล็อกอิน (เพื่อใช้แสดงเป็น <img>)
+// kind: "lesson" (ค่าเริ่มต้น) สำหรับเอกสารแนบเนื้อหา, "cover" สำหรับรูปปกหลักสูตร,
+//       "image" สำหรับรูปภาพที่แทรกในเนื้อหาข้อความ, "video" สำหรับไฟล์วิดีโอที่อัปโหลดตรง
+//       ทั้งหมดไปอยู่ในโฟลเดอร์ Drive ของหลักสูตรเดียวกัน แค่ Cloud Function จะตั้งค่า
+//       การแชร์ของไฟล์ "cover"/"image"/"video" ให้เปิดดูได้แบบไม่ต้องล็อกอิน
+//       (เพื่อใช้แสดงเป็น <img> หรือฝังเป็น <iframe> เล่นวิดีโอ)
 // onProgress(percent:number) เรียกระหว่างอัปโหลดขึ้น Storage
-// resolve({ id, name, webViewLink, mimeType, iconLink, size, imageUrl? })
+// resolve({ id, name, webViewLink, mimeType, iconLink, size, imageUrl?, embedUrl? })
 function uploadFileToDrive(file, courseId, onProgress, kind) {
-  kind = kind === "cover" ? "cover" : "lesson";
+  kind = ["cover", "image", "video"].includes(kind) ? kind : "lesson";
   const jobId = (crypto.randomUUID && crypto.randomUUID()) ||
     (Date.now() + "-" + Math.random().toString(16).slice(2));
   const path = "pending-uploads/" + jobId + "/" + encodeURIComponent(courseId || "_") + "/" + kind + "/" + file.name;

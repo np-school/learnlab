@@ -2,8 +2,11 @@ let editUser = null;
 let editCourseId = null;
 let lessons = [];          // แคชรายการเนื้อหาของหลักสูตรนี้ เรียงตาม order
 let editingLessonId = null; // null = กำลังเพิ่มใหม่, มีค่า = กำลังแก้ไขรายการเดิม
-let lessonType = "text";    // 'text' | 'document' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
-let pendingDriveFile = null; // ผลลัพธ์ไฟล์ที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ
+let lessonType = "text";    // 'text' | 'document' | 'video' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
+let pendingDriveFile = null; // ผลลัพธ์ไฟล์ที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ (เอกสารแนบ)
+let savedEditorRange = null; // ตำแหน่งเคอร์เซอร์ในกล่องเนื้อหาข้อความ ก่อนเปิด file picker เลือกรูป
+let videoMode = "link";      // 'link' (YouTube/Vimeo) | 'upload' (ไฟล์วิดีโอขึ้น Drive)
+let pendingDriveVideoFile = null; // ผลลัพธ์ไฟล์วิดีโอที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ
 let existingCoverUrl = null;  // coverUrl เดิมที่โหลดมาจาก Firestore (ถ้ามี)
 let pendingCoverFile = null;  // ไฟล์รูปปกใหม่ที่ผู้ใช้เพิ่งเลือก รออัปโหลดตอนกดบันทึก
 let coverRemoved = false;     // ผู้ใช้กดลบรูปปกเดิม (ยังไม่ได้กดบันทึก)
@@ -213,12 +216,15 @@ function renderLessons() {
   box.innerHTML = lessons.map((l, i) => {
     const isText = l.type === "text";
     const isQuiz = l.type === "quiz";
+    const isVideo = l.type === "video";
     const isImage = l.type === "document" && (l.fileMimeType || "").startsWith("image/");
-    const icon = isText ? "align-left" : isQuiz ? "help-circle" : isImage ? "image" : "file-text";
+    const icon = isText ? "align-left" : isQuiz ? "help-circle" : isVideo ? "video" : isImage ? "image" : "file-text";
     const metaTxt = isText
       ? (stripHtml(l.content).trim().slice(0, 70) || "ยังไม่มีเนื้อหา")
       : isQuiz
       ? `${(l.questions || []).length} คำถาม · ผ่านที่ ${l.passScore != null ? l.passScore : 70}%`
+      : isVideo
+      ? (l.videoMode === "upload" ? `วิดีโอ (ไฟล์: ${l.videoFileName || "-"})` : `วิดีโอ (ลิงก์: ${l.videoSourceUrl || l.videoUrl || "-"})`)
       : (l.fileName || (isImage ? "รูปภาพ" : "ไฟล์แนบ"));
     return `
     <div class="lesson-item">
@@ -261,14 +267,21 @@ function openLessonModal(type) {
   editingLessonId = null;
   lessonType = type;
   pendingDriveFile = null;
-  const titles = { text: "เพิ่มเนื้อหาข้อความ", document: "เพิ่มเอกสารแนบ", quiz: "เพิ่มแบบทดสอบ" };
+  const titles = { text: "เพิ่มเนื้อหาข้อความ", document: "เพิ่มเอกสารแนบ", video: "เพิ่มวิดีโอ", quiz: "เพิ่มแบบทดสอบ" };
   document.getElementById("lessonModalTitle").textContent = titles[type] || "เพิ่มเนื้อหา";
   document.getElementById("lessonTitle").value = "";
   document.getElementById("lessonEditor").innerHTML = "";
   document.getElementById("lessonTextBlock").style.display = type === "text" ? "block" : "none";
   document.getElementById("lessonDocBlock").style.display = type === "document" ? "block" : "none";
+  document.getElementById("lessonVideoBlock").style.display = type === "video" ? "block" : "none";
   document.getElementById("lessonQuizBlock").style.display = type === "quiz" ? "block" : "none";
   resetDocUI();
+  if (type === "video") {
+    pendingDriveVideoFile = null;
+    document.getElementById("videoUrlInput").value = "";
+    resetVideoUI();
+    setVideoMode("link");
+  }
   if (type === "quiz") {
     quizQuestions = [];
     document.getElementById("quizPassScore").value = 70;
@@ -287,15 +300,28 @@ function editLesson(id) {
     ? { id: l.fileId, name: l.fileName, webViewLink: l.fileUrl, mimeType: l.fileMimeType, iconLink: l.fileIconLink }
     : null;
 
-  const titles = { text: "แก้ไขเนื้อหาข้อความ", document: "แก้ไขเอกสารแนบ", quiz: "แก้ไขแบบทดสอบ" };
+  const titles = { text: "แก้ไขเนื้อหาข้อความ", document: "แก้ไขเอกสารแนบ", video: "แก้ไขวิดีโอ", quiz: "แก้ไขแบบทดสอบ" };
   document.getElementById("lessonModalTitle").textContent = titles[l.type] || "แก้ไขเนื้อหา";
   document.getElementById("lessonTitle").value = l.title || "";
   document.getElementById("lessonEditor").innerHTML = l.content || "";
   document.getElementById("lessonTextBlock").style.display = l.type === "text" ? "block" : "none";
   document.getElementById("lessonDocBlock").style.display = l.type === "document" ? "block" : "none";
+  document.getElementById("lessonVideoBlock").style.display = l.type === "video" ? "block" : "none";
   document.getElementById("lessonQuizBlock").style.display = l.type === "quiz" ? "block" : "none";
   resetDocUI();
   if (l.type === "document" && l.fileName) showDocFileCard(pendingDriveFile);
+  if (l.type === "video") {
+    resetVideoUI();
+    if (l.videoMode === "upload") {
+      pendingDriveVideoFile = { id: l.videoFileId, name: l.videoFileName, embedUrl: l.videoUrl };
+      setVideoMode("upload");
+      showVideoFileCard(pendingDriveVideoFile);
+    } else {
+      pendingDriveVideoFile = null;
+      setVideoMode("link");
+      document.getElementById("videoUrlInput").value = l.videoSourceUrl || "";
+    }
+  }
   if (l.type === "quiz") {
     quizQuestions = JSON.parse(JSON.stringify(l.questions || []));
     document.getElementById("quizPassScore").value = l.passScore != null ? l.passScore : 70;
@@ -327,6 +353,24 @@ function saveLesson() {
     data.fileUrl = pendingDriveFile.webViewLink;
     data.fileMimeType = pendingDriveFile.mimeType || "";
     data.fileIconLink = pendingDriveFile.iconLink || "";
+  } else if (lessonType === "video") {
+    data.videoMode = videoMode;
+    if (videoMode === "link") {
+      const raw = document.getElementById("videoUrlInput").value.trim();
+      if (!raw) { showToast("กรุณาใส่ลิงก์วิดีโอ", "error"); return; }
+      const embed = toEmbeddableVideoUrl(raw);
+      if (!embed) { showToast("ลิงก์วิดีโอไม่ถูกต้อง — รองรับเฉพาะลิงก์ YouTube หรือ Vimeo เท่านั้น", "error"); return; }
+      data.videoUrl = embed;
+      data.videoSourceUrl = raw;
+      data.videoFileId = firebase.firestore.FieldValue.delete();
+      data.videoFileName = firebase.firestore.FieldValue.delete();
+    } else {
+      if (!pendingDriveVideoFile) { showToast("กรุณาอัปโหลดไฟล์วิดีโอก่อนบันทึก", "error"); return; }
+      data.videoUrl = pendingDriveVideoFile.embedUrl;
+      data.videoFileId = pendingDriveVideoFile.id;
+      data.videoFileName = pendingDriveVideoFile.name;
+      data.videoSourceUrl = firebase.firestore.FieldValue.delete();
+    }
   } else if (lessonType === "quiz") {
     const passScore = Number(document.getElementById("quizPassScore").value);
     if (!passScore || passScore < 1 || passScore > 100) { showToast("กรุณากรอกเกณฑ์ผ่านเป็นตัวเลข 1-100", "error"); return; }
@@ -511,5 +555,149 @@ function showDocFileCard(f) {
       <div class="hint">${isImage ? "รูปภาพ" : "ไฟล์เอกสาร"} — อัปโหลดขึ้น Google Drive แล้ว${f.webViewLink ? ` · <a href="${f.webViewLink}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;">ดูตัวอย่าง</a>` : ""}</div>
     </div>
     <button type="button" class="icon-btn" onclick="document.getElementById('lessonFileInput').click()" title="เปลี่ยนไฟล์"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>`;
+  lucide.createIcons();
+}
+
+// ---------------------------------------------------------
+// แทรกรูปภาพในเนื้อหาข้อความ (rich editor) — อัปโหลดขึ้น Google Drive
+// (kind="image" ทำให้ Cloud Function เปิดสิทธิ์สาธารณะ + คืน imageUrl ที่ใช้เป็น <img src=""> ได้ตรงๆ)
+// ---------------------------------------------------------
+function insertLessonImage() {
+  if (!editCourseId) { showToast("กรุณาบันทึกข้อมูลหลักสูตรก่อนแทรกรูปภาพ", "error"); return; }
+  const editor = document.getElementById("lessonEditor");
+  editor.focus();
+  const sel = window.getSelection();
+  savedEditorRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+  document.getElementById("lessonImageInput").click();
+}
+
+function handleLessonImageChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error"); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast("ขนาดรูปต้องไม่เกิน 5MB", "error"); return; }
+
+  const editor = document.getElementById("lessonEditor");
+  editor.focus();
+  const sel = window.getSelection();
+  if (savedEditorRange) { sel.removeAllRanges(); sel.addRange(savedEditorRange); }
+
+  const placeholderId = "img-uploading-" + Date.now();
+  document.execCommand("insertHTML", false,
+    `<span id="${placeholderId}" class="editor-img-uploading">กำลังอัปโหลดรูปภาพ...</span>&nbsp;`);
+
+  document.getElementById("lessonSaveBtn").disabled = true;
+  uploadFileToDrive(file, editCourseId, () => {}, "image").then(driveFile => {
+    const span = document.getElementById(placeholderId);
+    const imgHtml = `<img src="${driveFile.imageUrl}" alt="${escapeHtml(file.name)}" style="max-width:100%;border-radius:8px;margin:8px 0;display:block;">`;
+    if (span) span.outerHTML = imgHtml;
+    showToast("แทรกรูปภาพเรียบร้อย", "success");
+  }).catch(err => {
+    const span = document.getElementById(placeholderId);
+    if (span) span.remove();
+    showToast("แทรกรูปภาพไม่สำเร็จ: " + (err.message || err), "error");
+  }).finally(() => {
+    document.getElementById("lessonSaveBtn").disabled = false;
+  });
+}
+
+// ---------------------------------------------------------
+// วิดีโอ — 2 โหมด: 'link' (แนะนำ ฝัง YouTube/Vimeo) หรือ 'upload' (ไฟล์ขึ้น Google Drive)
+// ---------------------------------------------------------
+function setVideoMode(mode) {
+  videoMode = mode === "upload" ? "upload" : "link";
+  document.getElementById("videoModeLinkBtn").classList.toggle("mode-active", videoMode === "link");
+  document.getElementById("videoModeUploadBtn").classList.toggle("mode-active", videoMode === "upload");
+  document.getElementById("videoLinkBlock").style.display = videoMode === "link" ? "block" : "none";
+  document.getElementById("videoUploadBlock").style.display = videoMode === "upload" ? "block" : "none";
+}
+
+// แปลงลิงก์ YouTube/Vimeo รูปแบบต่างๆ ให้เป็นลิงก์ embed ที่ใช้ใน <iframe> ได้ตรงๆ
+// คืนค่า null ถ้าไม่ใช่ลิงก์ที่รองรับ
+function toEmbeddableVideoUrl(raw) {
+  let u;
+  try { u = new URL((raw || "").trim()); } catch (e) { return null; }
+  const host = u.hostname.replace(/^www\.|^m\./, "");
+
+  if (host === "youtu.be") {
+    const id = u.pathname.slice(1).split("/")[0];
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  }
+  if (host === "youtube.com") {
+    if (u.pathname === "/watch") {
+      const id = u.searchParams.get("v");
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+    if (u.pathname.startsWith("/embed/")) return u.toString();
+    if (u.pathname.startsWith("/shorts/")) {
+      const id = u.pathname.split("/")[2];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+  }
+  if (host === "vimeo.com") {
+    const id = u.pathname.split("/").filter(Boolean)[0];
+    return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null;
+  }
+  if (host === "player.vimeo.com") return u.toString();
+
+  return null;
+}
+
+function resetVideoUI() {
+  document.getElementById("videoFileCard").style.display = "none";
+  document.getElementById("videoProgressWrap").style.display = "none";
+  document.getElementById("lessonVideoFileInput").value = "";
+}
+
+function handleVideoFileChosen(e) {
+  const file = e.target.files[0];
+  if (file) uploadVideoFile(file);
+}
+function handleVideoFileDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("dragover");
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) uploadVideoFile(file);
+}
+
+function uploadVideoFile(file) {
+  if (!editCourseId) { showToast("กรุณาบันทึกข้อมูลหลักสูตรก่อนอัปโหลดวิดีโอ", "error"); return; }
+  if (!file.type.startsWith("video/")) { showToast("กรุณาเลือกไฟล์วิดีโอเท่านั้น", "error"); return; }
+
+  document.getElementById("videoFileCard").style.display = "none";
+  document.getElementById("videoProgressWrap").style.display = "block";
+  document.getElementById("videoProgressFill").style.width = "0%";
+  document.getElementById("videoProgressText").textContent = "กำลังอัปโหลด " + file.name + "...";
+  document.getElementById("lessonSaveBtn").disabled = true;
+
+  uploadFileToDrive(file, editCourseId, pct => {
+    document.getElementById("videoProgressFill").style.width = pct + "%";
+    document.getElementById("videoProgressText").textContent = pct < 100
+      ? "กำลังอัปโหลด... " + pct + "%"
+      : "กำลังประมวลผลบน Google Drive...";
+  }, "video").then(res => {
+    pendingDriveVideoFile = res;
+    document.getElementById("videoProgressWrap").style.display = "none";
+    document.getElementById("lessonSaveBtn").disabled = false;
+    showVideoFileCard(res);
+    showToast("อัปโหลดวิดีโอขึ้น Google Drive เรียบร้อย", "success");
+  }).catch(err => {
+    document.getElementById("videoProgressWrap").style.display = "none";
+    document.getElementById("lessonSaveBtn").disabled = false;
+    showToast("อัปโหลดวิดีโอไม่สำเร็จ: " + (err.message || err), "error");
+  });
+}
+
+function showVideoFileCard(f) {
+  const box = document.getElementById("videoFileCard");
+  box.style.display = "flex";
+  box.innerHTML = `
+    <i data-lucide="video" style="width:20px;height:20px;color:var(--c-amber-deep)"></i>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(f.name || "")}</div>
+      <div class="hint">ไฟล์วิดีโอ — อัปโหลดขึ้น Google Drive แล้ว</div>
+    </div>
+    <button type="button" class="icon-btn" onclick="document.getElementById('lessonVideoFileInput').click()" title="เปลี่ยนไฟล์"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>`;
   lucide.createIcons();
 }

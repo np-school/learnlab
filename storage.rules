@@ -3,11 +3,12 @@ service firebase.storage {
   match /b/{bucket}/o {
     // ไฟล์ชั่วคราวก่อนถูก Cloud Function ย้ายขึ้น Google Drive แล้วลบทิ้ง
     // path: pending-uploads/{jobId}/{courseId}/{kind}/{fileName}
-    // (kind = "lesson" สำหรับเอกสารแนบเนื้อหา, "cover" สำหรับรูปปกหลักสูตร — ทั้งคู่ไปอยู่โฟลเดอร์ Drive ของหลักสูตรเดียวกัน)
+    // (kind = "lesson" เอกสารแนบเนื้อหา, "cover" รูปปกหลักสูตร, "image" รูปแทรกในเนื้อหาข้อความ,
+    //  "video" ไฟล์วิดีโอที่อัปโหลดตรง — ทั้งหมดไปอยู่โฟลเดอร์ Drive ของหลักสูตรเดียวกัน)
     match /pending-uploads/{jobId}/{fileName=**} {
       allow read: if false; // ฝั่ง client อ่านไม่ได้เลย มีแค่ Cloud Function (admin SDK) เข้าถึง
       allow write: if request.auth != null
-                   && request.resource.size < 50 * 1024 * 1024; // จำกัด 50MB/ไฟล์ ปรับได้ตามต้องการ
+                   && request.resource.size < 300 * 1024 * 1024; // จำกัด 300MB/ไฟล์ (รองรับวิดีโอ) ปรับได้ตามต้องการ
       allow delete: if false; // ให้ Cloud Function ลบเท่านั้น
     }
 

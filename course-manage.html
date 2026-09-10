@@ -85,6 +85,7 @@
         <div class="lesson-add-row">
           <button class="btn-secondary" onclick="openLessonModal('text')"><i data-lucide="type" style="width:15px;height:15px"></i>เพิ่มเนื้อหาข้อความ</button>
           <button class="btn-secondary" onclick="openLessonModal('document')"><i data-lucide="file-up" style="width:15px;height:15px"></i>เพิ่มเอกสาร/รูปภาพ</button>
+          <button class="btn-secondary" onclick="openLessonModal('video')"><i data-lucide="video" style="width:15px;height:15px"></i>เพิ่มวิดีโอ</button>
           <button class="btn-secondary" onclick="openLessonModal('quiz')"><i data-lucide="help-circle" style="width:15px;height:15px"></i>เพิ่มแบบทดสอบ</button>
         </div>
       </div>
@@ -119,9 +120,12 @@
         <button type="button" onclick="fmtBlock('blockquote')" title="คำพูดอ้างอิง"><i data-lucide="quote" style="width:14px;height:14px"></i></button>
         <span class="editor-sep"></span>
         <button type="button" onclick="fmtLink()" title="แทรกลิงก์"><i data-lucide="link" style="width:14px;height:14px"></i></button>
+        <button type="button" onclick="insertLessonImage()" title="แทรกรูปภาพ"><i data-lucide="image" style="width:14px;height:14px"></i></button>
         <button type="button" onclick="fmt('removeFormat')" title="ล้างรูปแบบ"><i data-lucide="eraser" style="width:14px;height:14px"></i></button>
       </div>
       <div id="lessonEditor" class="rich-editor" contenteditable="true" data-placeholder="พิมพ์เนื้อหาที่นี่..."></div>
+      <input type="file" id="lessonImageInput" accept="image/*" style="display:none" onchange="handleLessonImageChosen(event)">
+      <div class="hint" style="margin-top:6px;">แทรกรูปภาพได้จากปุ่ม <i data-lucide="image" style="width:11px;height:11px;vertical-align:-1px"></i> ด้านบน — รูปจะถูกอัปโหลดขึ้น Google Drive และแสดงในเนื้อหาโดยอัตโนมัติ (ไม่เกิน 5MB ต่อรูป)</div>
     </div>
 
     <!-- เอกสารแนบ / รูปภาพ -->
@@ -141,6 +145,43 @@
       <div id="docProgressWrap" style="display:none;margin-top:10px;">
         <div class="progress-track"><div class="progress-fill" id="docProgressFill" style="width:0%"></div></div>
         <div class="hint" id="docProgressText" style="margin-top:6px;">กำลังอัปโหลด...</div>
+      </div>
+    </div>
+
+    <!-- วิดีโอ -->
+    <div id="lessonVideoBlock" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button type="button" class="btn-secondary" id="videoModeLinkBtn" onclick="setVideoMode('link')"><i data-lucide="link" style="width:14px;height:14px"></i>ลิงก์ YouTube / Vimeo</button>
+        <button type="button" class="btn-secondary" id="videoModeUploadBtn" onclick="setVideoMode('upload')"><i data-lucide="upload-cloud" style="width:14px;height:14px"></i>อัปโหลดไฟล์วิดีโอ</button>
+      </div>
+
+      <div id="videoLinkBlock">
+        <div class="field full">
+          <label>ลิงก์วิดีโอ <span class="req">*</span></label>
+          <input id="videoUrlInput" placeholder="เช่น https://www.youtube.com/watch?v=xxxxxxxxxxx">
+        </div>
+        <div class="hint" style="margin-top:6px;">
+          <b>แนะนำวิธีนี้เป็นหลัก</b> — อัปโหลดวิดีโอขึ้น YouTube แบบ "ไม่แสดงในการค้นหา (Unlisted)" หรือ Vimeo แล้ววางลิงก์ที่นี่
+          ข้อดี: เล่นลื่น ปรับความคมชัดอัตโนมัติตามอินเทอร์เน็ตผู้เรียน ไม่กินพื้นที่ Drive ของหลักสูตร และไม่จำกัดขนาดไฟล์
+        </div>
+      </div>
+
+      <div id="videoUploadBlock" style="display:none;">
+        <div id="videoDropZone" class="doc-drop-zone"
+             onclick="document.getElementById('lessonVideoFileInput').click()"
+             ondragover="event.preventDefault();this.classList.add('dragover');"
+             ondragleave="this.classList.remove('dragover');"
+             ondrop="handleVideoFileDrop(event)">
+          <i data-lucide="upload-cloud" style="width:26px;height:26px"></i>
+          <div style="font-size:13px;font-weight:700;">คลิกเพื่อเลือกไฟล์วิดีโอ หรือวางไฟล์ที่นี่</div>
+          <div class="hint" style="margin-top:3px;">ไฟล์ MP4/MOV ฯลฯ — อัปโหลดขึ้น Google Drive แล้วฝังเล่นในหน้าเรียน แนะนำไม่เกิน ~200MB และไม่ควรใช้กับวิดีโอความยาวมาก เพราะโหลด/สตรีมช้ากว่าลิงก์ YouTube</div>
+        </div>
+        <input type="file" id="lessonVideoFileInput" accept="video/*" style="display:none" onchange="handleVideoFileChosen(event)">
+        <div id="videoFileCard" class="doc-file-card" style="display:none;"></div>
+        <div id="videoProgressWrap" style="display:none;margin-top:10px;">
+          <div class="progress-track"><div class="progress-fill" id="videoProgressFill" style="width:0%"></div></div>
+          <div class="hint" id="videoProgressText" style="margin-top:6px;">กำลังอัปโหลด...</div>
+        </div>
       </div>
     </div>
 

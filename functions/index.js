@@ -95,7 +95,9 @@ exports.uploadToDrive = onObjectFinalized(
 
     // รูปแบบ path: pending-uploads/{jobId}/{courseId}/{kind}/{originalFileName}
     // courseId เป็น "_" หมายถึงไม่ผูกกับหลักสูตรใด (อัปขึ้นโฟลเดอร์รากตามเดิม)
-    // kind: "lesson" = เอกสารแนบเนื้อหา, "cover" = รูปปกหลักสูตร (ทั้งคู่ไปอยู่โฟลเดอร์ Drive ของหลักสูตรเดียวกัน)
+    // kind: "lesson" = เอกสารแนบเนื้อหา, "cover" = รูปปกหลักสูตร,
+    //       "image" = รูปภาพที่แทรกในเนื้อหาข้อความ, "video" = ไฟล์วิดีโอที่อัปโหลดตรง
+    //       (ทั้งหมดไปอยู่โฟลเดอร์ Drive ของหลักสูตรเดียวกัน)
     const parts = filePath.slice(UPLOAD_PREFIX.length).split("/");
     if (parts.length < 4) {
       logger.error("รูปแบบ path ไม่ถูกต้อง:", filePath);
@@ -103,7 +105,8 @@ exports.uploadToDrive = onObjectFinalized(
     }
     const jobId = parts[0];
     const courseId = decodeURIComponent(parts[1]);
-    const kind = parts[2] === "cover" ? "cover" : "lesson";
+    const KNOWN_KINDS = ["cover", "image", "video"];
+    const kind = KNOWN_KINDS.includes(parts[2]) ? parts[2] : "lesson";
     const fileName = parts.slice(3).join("/");
     const jobRef = admin.firestore().collection("uploadJobs").doc(jobId);
     const bucket = admin.storage().bucket(obj.bucket);
@@ -137,9 +140,10 @@ exports.uploadToDrive = onObjectFinalized(
 
       const driveFile = res.data;
 
-      // รูปปกหลักสูตร: เปิดสิทธิ์ "ดูได้ทุกคนที่มีลิงก์" เพื่อให้ฝัง <img src="..."> แสดงได้ทันที
-      // (ไฟล์เนื้อหาเนื้อหาอื่น ๆ ยังคงจำกัดสิทธิ์ตามเดิม ต้องเปิดผ่านลิงก์ webViewLink ที่มีการล็อกอิน)
-      if (kind === "cover") {
+      // รูปปกหลักสูตร / รูปภาพแทรกในเนื้อหา / วิดีโออัปโหลด: เปิดสิทธิ์ "ดูได้ทุกคนที่มีลิงก์"
+      // เพื่อให้ฝัง <img src="..."> หรือ <iframe src="..."> แสดง/เล่นได้ทันทีโดยไม่ต้องล็อกอิน
+      // (ไฟล์เอกสารแนบทั่วไป kind="lesson" ยังคงจำกัดสิทธิ์ตามเดิม ต้องเปิดผ่าน webViewLink ที่มีการล็อกอิน)
+      if (kind === "cover" || kind === "image" || kind === "video") {
         try {
           await drive.permissions.create({
             fileId: driveFile.id,
@@ -147,10 +151,15 @@ exports.uploadToDrive = onObjectFinalized(
             supportsAllDrives: true
           });
         } catch (permErr) {
-          logger.error("ตั้งค่าสิทธิ์เปิดสาธารณะรูปปกไม่สำเร็จ:", permErr);
+          logger.error("ตั้งค่าสิทธิ์เปิดสาธารณะไม่สำเร็จ (kind=" + kind + "):", permErr);
         }
-        driveFile.imageUrl = (driveFile.thumbnailLink || "").replace(/=s\d+$/, "=s1600") ||
-          ("https://drive.google.com/uc?export=view&id=" + driveFile.id);
+        if (kind === "video") {
+          // ใช้ Drive preview viewer แบบฝัง iframe ได้ (รองรับ seek/streaming แบบพื้นฐาน)
+          driveFile.embedUrl = "https://drive.google.com/file/d/" + driveFile.id + "/preview";
+        } else {
+          driveFile.imageUrl = (driveFile.thumbnailLink || "").replace(/=s\d+$/, "=s1600") ||
+            ("https://drive.google.com/uc?export=view&id=" + driveFile.id);
+        }
       }
 
       await jobRef.set({

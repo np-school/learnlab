@@ -100,20 +100,38 @@ function updateProgressUI() {
   badge.textContent = isDone ? "เรียนจบแล้ว" : "กำลังเรียน";
 }
 
+// การเรียนต้องเรียงตามลำดับ — บทที่ i ปลดล็อกได้ก็ต่อเมื่อบทที่ i-1 "เรียนแล้ว/ผ่านแล้ว" เท่านั้น
+// (บทแรกปลดล็อกเสมอ)
+function isLessonUnlocked(index) {
+  if (index <= 0) return true;
+  const prev = playerLessons[index - 1];
+  return playerEnrollment.completedLessonIds.includes(prev.id);
+}
+
+function lockedLessonClick() {
+  showToast("กรุณาเรียนเนื้อหาก่อนหน้าให้เสร็จก่อน จึงจะปลดล็อกบทถัดไปได้", "error");
+}
+
 function renderLessonNav() {
   const box = document.getElementById("lessonNav");
   box.innerHTML = playerLessons.map((l, i) => {
     const isDone = playerEnrollment.completedLessonIds.includes(l.id);
+    const unlocked = isLessonUnlocked(i);
     const isActive = l.id === activeLessonId;
-    const icon = l.type === "text" ? "align-left" : l.type === "quiz" ? "help-circle" : "file-text";
+    const icon = l.type === "text" ? "align-left" : l.type === "quiz" ? "help-circle" : l.type === "video" ? "video" : "file-text";
+    const statusInner = isDone
+      ? '<i data-lucide="check" style="width:14px;height:14px"></i>'
+      : (!unlocked ? '<i data-lucide="lock" style="width:12px;height:12px"></i>' : (i + 1));
+    const typeLabel = l.type === "text" ? "เนื้อหา" : l.type === "quiz" ? "แบบทดสอบ" : l.type === "video" ? "วิดีโอ" : "เอกสารแนบ";
     return `
-    <button class="player-lesson-btn ${isActive ? "active" : ""}" onclick="selectLesson('${l.id}')">
-      <div class="player-lesson-status ${isDone ? "done" : ""}">${isDone ? '<i data-lucide="check" style="width:14px;height:14px"></i>' : (i + 1)}</div>
+    <button class="player-lesson-btn ${isActive ? "active" : ""} ${!unlocked ? "locked" : ""}"
+      onclick="${unlocked ? `selectLesson('${l.id}')` : "lockedLessonClick()"}" ${!unlocked ? 'title="เรียนบทก่อนหน้าให้เสร็จก่อน"' : ""}>
+      <div class="player-lesson-status ${isDone ? "done" : ""} ${!unlocked ? "locked" : ""}">${statusInner}</div>
       <div class="player-lesson-btn-body">
         <div class="player-lesson-btn-title">${escapePlayerHtml(l.title || "(ไม่มีชื่อ)")}</div>
-        <div class="player-lesson-btn-meta">${l.type === "text" ? "เนื้อหา" : l.type === "quiz" ? "แบบทดสอบ" : "เอกสารแนบ"}</div>
+        <div class="player-lesson-btn-meta">${typeLabel}</div>
       </div>
-      <i data-lucide="${icon}" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"></i>
+      <i data-lucide="${!unlocked ? "lock" : icon}" style="width:14px;height:14px;flex-shrink:0;color:var(--text3)"></i>
     </button>`;
   }).join("");
   lucide.createIcons();
@@ -124,6 +142,9 @@ function escapePlayerHtml(s) {
 }
 
 function selectLesson(lessonId) {
+  const idx = playerLessons.findIndex(x => x.id === lessonId);
+  if (idx > 0 && !isLessonUnlocked(idx)) { lockedLessonClick(); return; }
+
   activeLessonId = lessonId;
   quizPicked = {};
   quizSubmitted = false;
@@ -162,6 +183,18 @@ function selectLesson(lessonId) {
           : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
         ${renderNextLessonBtn(l.id)}
       </div>`;
+  } else if (l.type === "video") {
+    contentEl.innerHTML = `
+      <h2 style="margin-top:0;">${escapePlayerHtml(l.title || "")}</h2>
+      ${l.videoUrl
+        ? `<div class="player-video-wrap"><iframe src="${l.videoUrl}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`
+        : `<div class="empty-state">ยังไม่มีวิดีโอ</div>`}
+      <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
+        ${isDone
+          ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
+          : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
+        ${renderNextLessonBtn(l.id)}
+      </div>`;
   } else if (l.type === "quiz") {
     renderQuiz(l, isDone);
   }
@@ -172,6 +205,8 @@ function renderNextLessonBtn(currentId) {
   const idx = playerLessons.findIndex(x => x.id === currentId);
   const next = playerLessons[idx + 1];
   if (!next) return "";
+  // บทถัดไปจะปลดล็อกได้ก็ต่อเมื่อบทปัจจุบันเรียน/ผ่านแล้วเท่านั้น จึงค่อยแสดงปุ่มนี้
+  if (!playerEnrollment.completedLessonIds.includes(currentId)) return "";
   return `<button class="btn-secondary" style="margin-right:8px;" onclick="selectLesson('${next.id}')">บทถัดไป<i data-lucide="chevron-left" style="width:14px;height:14px"></i></button>`;
 }
 
