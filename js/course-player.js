@@ -167,7 +167,7 @@ function selectLesson(lessonId) {
       ${l.videoUrl
         ? `<div class="player-video-wrap"><iframe src="${l.videoUrl}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`
         : `<div class="empty-state">ยังไม่มีวิดีโอ</div>`}
-      <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
+      <div class="player-lesson-footer">
         ${isDone
           ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
           : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
@@ -216,7 +216,7 @@ function renderContentLesson(l, isDone) {
     <h2 style="margin-top:0;margin-bottom:4px;">${escapePlayerHtml(l.title || "")}</h2>
     ${textHtml}
     ${attachHtml}
-    <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
+    <div class="player-lesson-footer">
       ${isDone
         ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
         : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
@@ -261,13 +261,24 @@ function renderAttachmentBlock(a) {
     </div>`;
 }
 
+// ปุ่ม "บทถัดไป" ท้ายบทเรียน — แสดงก็ต่อเมื่อบทปัจจุบันเรียน/ผ่านแล้วเท่านั้น
+// ถ้าเป็นบทสุดท้ายของหลักสูตร ให้แสดงข้อความสรุปว่าเรียนจบแล้วแทนปุ่ม
 function renderNextLessonBtn(currentId) {
+  if (!playerEnrollment.completedLessonIds.includes(currentId)) return "";
   const idx = playerLessons.findIndex(x => x.id === currentId);
   const next = playerLessons[idx + 1];
-  if (!next) return "";
-  // บทถัดไปจะปลดล็อกได้ก็ต่อเมื่อบทปัจจุบันเรียน/ผ่านแล้วเท่านั้น จึงค่อยแสดงปุ่มนี้
-  if (!playerEnrollment.completedLessonIds.includes(currentId)) return "";
-  return `<button class="btn-secondary" style="margin-right:8px;" onclick="selectLesson('${next.id}')">บทถัดไป<i data-lucide="chevron-left" style="width:14px;height:14px"></i></button>`;
+  if (!next) {
+    return `<div class="player-course-done"><i data-lucide="check-circle" style="width:16px;height:16px"></i>เรียนครบทุกบทแล้ว</div>`;
+  }
+  const nextTitle = escapePlayerHtml(next.title || `บทที่ ${idx + 2}`);
+  return `
+    <button class="btn-next" onclick="selectLesson('${next.id}')">
+      <span>
+        <span style="display:block;">บทถัดไป</span>
+        <span class="btn-next-sub">${nextTitle}</span>
+      </span>
+      <i data-lucide="chevron-right" style="width:16px;height:16px;flex-shrink:0;"></i>
+    </button>`;
 }
 
 // ---------------------------------------------------------
@@ -309,13 +320,15 @@ function renderQuiz(l, isDone) {
     <div class="hint" style="margin-bottom:14px;">เกณฑ์ผ่าน ${passScore}% — ทำซ้ำได้ไม่จำกัดจำนวนครั้ง</div>
     ${!questions.length ? `<div class="empty-state">ยังไม่มีคำถามในแบบทดสอบนี้</div>` : qHtml}
     ${resultHtml}
-    <div style="margin-top:18px;border-top:1px solid var(--border-soft);padding-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      ${isDone ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>ผ่านแล้ว</span>` : ""}
-      ${questions.length ? (
-        !quizSubmitted
-          ? `<button class="btn-primary" onclick="submitQuiz('${l.id}')"><i data-lucide="send" style="width:14px;height:14px"></i>ส่งคำตอบ</button>`
-          : `<button class="btn-secondary" onclick="retakeQuiz('${l.id}')"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ทำใหม่</button>`
-      ) : ""}
+    <div class="player-lesson-footer">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        ${isDone ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>ผ่านแล้ว</span>` : ""}
+        ${questions.length ? (
+          !quizSubmitted
+            ? `<button class="btn-primary" onclick="submitQuiz('${l.id}')"><i data-lucide="send" style="width:14px;height:14px"></i>ส่งคำตอบ</button>`
+            : `<button class="btn-secondary" onclick="retakeQuiz('${l.id}')"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>ทำใหม่</button>`
+        ) : ""}
+      </div>
       ${renderNextLessonBtn(l.id)}
     </div>`;
   lucide.createIcons();

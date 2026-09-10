@@ -30,6 +30,24 @@ guardPage(["instructor"], (user, profile) => {
 });
 
 // ---------------------------------------------------------
+// แท็บย่อย: ข้อมูลหลักสูตร / เนื้อหาหลักสูตร
+// ---------------------------------------------------------
+function switchCourseTab(name) {
+  const isContent = name === "content";
+  document.getElementById("tabPanelInfo").classList.toggle("active", !isContent);
+  document.getElementById("tabPanelContent").classList.toggle("active", isContent);
+  document.getElementById("tabBtnInfo").classList.toggle("active", !isContent);
+  document.getElementById("tabBtnContent").classList.toggle("active", isContent);
+}
+
+// ปุ่มเลือกสถานะแบบร่าง/เผยแพร่ — sync ค่ากับ input ซ่อน #cStatus ที่ saveCourse() อ่านค่าอยู่
+function setCourseStatus(value) {
+  document.getElementById("cStatus").value = value;
+  document.getElementById("statusBtnDraft").classList.toggle("active", value === "draft");
+  document.getElementById("statusBtnPublished").classList.toggle("active", value === "published");
+}
+
+// ---------------------------------------------------------
 // ขั้นที่ 1: ข้อมูลพื้นฐานหลักสูตร
 // ---------------------------------------------------------
 function loadCourseBasics() {
@@ -40,7 +58,7 @@ function loadCourseBasics() {
     document.getElementById("cTitle").value = c.title || "";
     document.getElementById("cDesc").value = c.description || "";
     document.getElementById("cCategory").value = c.category || "";
-    document.getElementById("cStatus").value = c.status || "draft";
+    setCourseStatus(c.status || "draft");
     existingCoverUrl = c.coverUrl || null;
     pendingCoverFile = null;
     coverRemoved = false;
@@ -143,6 +161,7 @@ function saveCourse() {
         document.getElementById("pageTitle").textContent = "แก้ไขหลักสูตร";
         unlockContentSection();
         loadLessons();
+        switchCourseTab("content");
       }
       loadCourseBasics(); // โหลดค่า coverUrl ล่าสุดกลับมาแสดง
     })
@@ -179,6 +198,10 @@ function unlockContentSection() {
   document.getElementById("contentLockedHint").style.display = "none";
   document.getElementById("contentBody").style.display = "block";
   document.getElementById("finishBtn").style.display = "inline-flex";
+  const tabBtn = document.getElementById("tabBtnContent");
+  tabBtn.disabled = false;
+  tabBtn.removeAttribute("title");
+  tabBtn.classList.add("done");
 }
 
 // ---------------------------------------------------------
@@ -636,7 +659,7 @@ function handleLessonImageChosen(e) {
   document.getElementById("lessonSaveBtn").disabled = true;
   uploadFileToDrive(file, editCourseId, () => {}, "image").then(driveFile => {
     const span = document.getElementById(placeholderId);
-    const imgHtml = `<img src="${driveFile.imageUrl}" alt="${escapeHtml(file.name)}" style="max-width:100%;border-radius:8px;margin:8px 0;display:block;">`;
+    const imgHtml = `<img src="${driveFile.imageUrl}" alt="${escapeHtml(file.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;margin:8px 0;display:block;">`;
     if (span) span.outerHTML = imgHtml;
     showToast("แทรกรูปภาพเรียบร้อย", "success");
   }).catch(err => {
