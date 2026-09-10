@@ -4,6 +4,9 @@ let lessons = [];          // แคชรายการเนื้อหา�
 let editingLessonId = null; // null = กำลังเพิ่มใหม่, มีค่า = กำลังแก้ไขรายการเดิม
 let lessonType = "text";    // 'text' | 'document' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
 let pendingDriveFile = null; // ผลลัพธ์ไฟล์ที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ
+let existingCoverUrl = null;  // coverUrl เดิมที่โหลดมาจาก Firestore (ถ้ามี)
+let pendingCoverFile = null;  // ไฟล์รูปปกใหม่ที่ผู้ใช้เพิ่งเลือก รออัปโหลดตอนกดบันทึก
+let coverRemoved = false;     // ผู้ใช้กดลบรูปปกเดิม (ยังไม่ได้กดบันทึก)
 let quizQuestions = [];      // แคชคำถามแบบทดสอบที่กำลังแก้ไขอยู่ในโมดัล
                               // แต่ละข้อ: { text, options: [string,...], correct: index }
 
@@ -34,7 +37,49 @@ function loadCourseBasics() {
     document.getElementById("cDesc").value = c.description || "";
     document.getElementById("cCategory").value = c.category || "";
     document.getElementById("cStatus").value = c.status || "draft";
+    existingCoverUrl = c.coverUrl || null;
+    pendingCoverFile = null;
+    coverRemoved = false;
+    renderCoverPreview();
   });
+}
+
+// ---------------------------------------------------------
+// ปกหลักสูตร — อัปโหลดตรงขึ้น Firebase Storage (course-covers/{courseId}/...)
+// เลือกไฟล์ไว้ก่อน แสดงตัวอย่างทันที แต่จะอัปโหลดจริงตอนกด "บันทึกข้อมูลหลักสูตร"
+// ---------------------------------------------------------
+function handleCoverFileChosen(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error"); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast("ขนาดรูปต้องไม่เกิน 5MB", "error"); return; }
+  pendingCoverFile = file;
+  coverRemoved = false;
+  renderCoverPreview();
+}
+
+function removeCoverImage() {
+  pendingCoverFile = null;
+  coverRemoved = true;
+  document.getElementById("coverFileInput").value = "";
+  renderCoverPreview();
+}
+
+function renderCoverPreview() {
+  const box = document.getElementById("coverPreviewBox");
+  const removeBtn = document.getElementById("coverRemoveBtn");
+  if (pendingCoverFile) {
+    const url = URL.createObjectURL(pendingCoverFile);
+    box.innerHTML = `<img src="${url}" alt="">`;
+    removeBtn.style.display = "inline-flex";
+  } else if (existingCoverUrl && !coverRemoved) {
+    box.innerHTML = `<img src="${existingCoverUrl}" alt="">`;
+    removeBtn.style.display = "inline-flex";
+  } else {
+    box.innerHTML = `<i data-lucide="image" style="width:30px;height:30px"></i>`;
+    removeBtn.style.display = "none";
+  }
+  lucide.createIcons();
 }
 
 function saveCourse() {
@@ -57,19 +102,46 @@ function saveCourse() {
   const isNew = !editCourseId;
   const ref = isNew ? db.collection("courses").doc() : db.collection("courses").doc(editCourseId);
   if (isNew) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  const courseIdForCover = isNew ? ref.id : editCourseId;
 
-  ref.set(data, { merge: true }).then(() => {
-    showToast("บันทึกข้อมูลหลักสูตรเรียบร้อย", "success");
-    document.getElementById("finishBtn").style.display = "inline-flex";
-    if (isNew) {
-      // หลักสูตรใหม่ถูกสร้างแล้ว — ปลดล็อกส่วนเนื้อหาต่อได้เลยโดยไม่ต้องออกจากหน้า
-      editCourseId = ref.id;
-      history.replaceState(null, "", "course-manage.html?id=" + editCourseId);
-      document.getElementById("pageTitle").textContent = "แก้ไขหลักสูตร";
-      unlockContentSection();
-      loadLessons();
-    }
-  }).catch(err => showToast("บันทึกไม่สำเร็จ: " + err.message, "error"));
+  const saveBtn = document.querySelector('[onclick="saveCourse()"]');
+  if (saveBtn) saveBtn.disabled = true;
+
+  uploadPendingCoverIfAny(courseIdForCover)
+    .then(coverUrl => {
+      if (coverUrl) data.coverUrl = coverUrl;
+      else if (coverRemoved) data.coverUrl = firebase.firestore.FieldValue.delete();
+      return ref.set(data, { merge: true });
+    })
+    .then(() => {
+      showToast("บันทึกข้อมูลหลักสูตรเรียบร้อย", "success");
+      document.getElementById("finishBtn").style.display = "inline-flex";
+      existingCoverUrl = coverRemoved ? null : (pendingCoverFile ? existingCoverUrl : existingCoverUrl);
+      pendingCoverFile = null;
+      coverRemoved = false;
+      if (isNew) {
+        // หลักสูตรใหม่ถูกสร้างแล้ว — ปลดล็อกส่วนเนื้อหาต่อได้เลยโดยไม่ต้องออกจากหน้า
+        editCourseId = ref.id;
+        history.replaceState(null, "", "course-manage.html?id=" + editCourseId);
+        document.getElementById("pageTitle").textContent = "แก้ไขหลักสูตร";
+        unlockContentSection();
+        loadLessons();
+      } else {
+        loadCourseBasics();
+      }
+    })
+    .catch(err => showToast("บันทึกไม่สำเร็จ: " + err.message, "error"))
+    .finally(() => { if (saveBtn) saveBtn.disabled = false; });
+}
+
+// อัปโหลดรูปปกที่เพิ่งเลือกไว้ (ถ้ามี) ขึ้น Firebase Storage แล้วคืน downloadURL
+// ถ้าไม่มีไฟล์ใหม่ คืน Promise<null> (ไม่แตะรูปปกเดิม)
+function uploadPendingCoverIfAny(courseId) {
+  if (!pendingCoverFile) return Promise.resolve(null);
+  const ext = (pendingCoverFile.name.split(".").pop() || "jpg").toLowerCase();
+  const path = "course-covers/" + courseId + "/cover_" + Date.now() + "." + ext;
+  const ref = storage.ref(path);
+  return ref.put(pendingCoverFile).then(() => ref.getDownloadURL());
 }
 
 function finishEditing() {

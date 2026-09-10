@@ -36,6 +36,22 @@
     <!-- ── ขั้นที่ 1: ข้อมูลหลักสูตร ── -->
     <div class="form-section">
       <div class="form-section-title"><i data-lucide="book-open" style="width:17px;height:17px;color:var(--accent)"></i>ข้อมูลหลักสูตร</div>
+
+      <div class="field full" style="margin-bottom:16px;">
+        <label>ปกหลักสูตร</label>
+        <div class="cover-uploader">
+          <div class="cover-preview-box" id="coverPreviewBox"><i data-lucide="image" style="width:30px;height:30px"></i></div>
+          <div class="cover-uploader-actions">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('coverFileInput').click()"><i data-lucide="upload" style="width:14px;height:14px"></i>เลือกรูปปก</button>
+              <button type="button" class="btn-secondary" id="coverRemoveBtn" style="display:none;" onclick="removeCoverImage()"><i data-lucide="trash-2" style="width:14px;height:14px"></i>ลบรูปปก</button>
+            </div>
+            <div class="hint">แนะนำอัตราส่วน 16:9 ขนาดไม่เกิน 5MB (JPG, PNG) — จะแสดงในหน้ารายการหลักสูตรและหน้าเรียน</div>
+          </div>
+          <input type="file" id="coverFileInput" accept="image/*" style="display:none" onchange="handleCoverFileChosen(event)">
+        </div>
+      </div>
+
       <div class="form-grid">
         <div class="field"><label>รหัสหลักสูตร <span class="req">*</span></label><input id="cCode" placeholder="เช่น TR-2026-001"></div>
         <div class="field full"><label>ชื่อหลักสูตร <span class="req">*</span></label><input id="cTitle" placeholder="เช่น การใช้ Google Workspace เพื่อการสอน"></div>

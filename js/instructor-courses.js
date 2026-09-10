@@ -12,7 +12,7 @@ guardPage(["instructor"], (user, profile) => {
       const c = doc.data();
       return `
       <div class="course-card">
-        <div class="course-cover"><i data-lucide="book-open" style="width:34px;height:34px"></i></div>
+        ${courseCoverHtml(c)}
         <div class="course-body">
           <div class="course-cat">${c.category || "หลักสูตรอบรม"}</div>
           <div class="course-title">${c.title || "ไม่มีชื่อหลักสูตร"}</div>

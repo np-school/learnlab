@@ -38,7 +38,7 @@ function renderCourses() {
     const enrolled = myEnrolledIds.has(c.id);
     return `
     <div class="course-card">
-      <div class="course-cover"><i data-lucide="book-open" style="width:34px;height:34px"></i></div>
+      ${courseCoverHtml(c)}
       <div class="course-body">
         <div class="course-cat">${c.category || "หลักสูตรอบรม"}</div>
         <div class="course-title">${c.title || "ไม่มีชื่อหลักสูตร"}</div>
@@ -47,7 +47,7 @@ function renderCourses() {
         <div class="course-footer">
           <span class="badge sky">เปิดรับสมัคร</span>
           ${enrolled
-            ? `<a class="btn-secondary" href="my-courses.html"><i data-lucide="check" style="width:14px;height:14px"></i>สมัครแล้ว</a>`
+            ? `<a class="btn-secondary" href="course-player.html?id=${c.id}"><i data-lucide="play" style="width:14px;height:14px"></i>เข้าเรียน</a>`
             : `<button class="btn-primary" onclick="enroll('${c.id}','${(c.title || "").replace(/'/g, "\\'")}')"><i data-lucide="plus" style="width:14px;height:14px"></i>สมัครเรียน</button>`}
         </div>
       </div>

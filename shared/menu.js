@@ -101,6 +101,18 @@ function renderShell(group, activeHref, profile) {
   if (window.lucide) lucide.createIcons();
 }
 
+// สร้าง HTML ของ "ปกหลักสูตร" ใช้ร่วมกันทุกหน้าที่มีการ์ดหลักสูตร (courses.js, my-courses.js, instructor-courses.js ฯลฯ)
+// ถ้ามี coverUrl ให้แสดงเป็นรูปจริง ถ้าไม่มีให้ fallback เป็นไอคอนเดิม
+function courseCoverHtml(c, opts) {
+  opts = opts || {};
+  const cls = opts.className || "course-cover";
+  const iconSize = opts.iconSize || 34;
+  if (c && c.coverUrl) {
+    return `<div class="${cls}" style="background:#fff;"><img src="${c.coverUrl}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>`;
+  }
+  return `<div class="${cls}"><i data-lucide="book-open" style="width:${iconSize}px;height:${iconSize}px"></i></div>`;
+}
+
 // ยุบ/ขยาย sidebar (เฉพาะจอ >900px — จำสถานะไว้ผ่าน localStorage ใช้ร่วมกันทุกหน้า)
 function toggleSidebarCollapse() {
   const sidebarEl = document.getElementById("sidebar");

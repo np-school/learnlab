@@ -258,6 +258,13 @@ tr:last-child td{border-bottom:none;}
 .quiz-option-row .icon-btn{flex-shrink:0;}
 .quiz-add-question-row{display:flex;justify-content:center;margin-top:4px;}
 
+/* ── ปกหลักสูตร: อัปโหลดตอนสร้าง/แก้ไขหลักสูตร (course-manage.html) ── */
+.cover-uploader{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.cover-preview-box{width:180px;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,var(--accent-tint),var(--c-sky-pale));display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;border:1px solid var(--border);}
+.cover-preview-box img{width:100%;height:100%;object-fit:cover;}
+.cover-uploader-actions{display:flex;flex-direction:column;gap:8px;}
+.cover-uploader-actions .hint{max-width:280px;}
+
 /* ── course card ── */
 .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;}
 .course-card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:box-shadow .15s,transform .15s;}
@@ -269,3 +276,30 @@ tr:last-child td{border-bottom:none;}
 .course-desc{font-size:12px;color:var(--text2);line-height:1.5;}
 .course-meta{font-size:11.5px;color:var(--text3);display:flex;align-items:center;gap:5px;}
 .course-footer{margin-top:auto;padding-top:10px;border-top:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+
+/* ── หน้าเรียน / course-player.html ── */
+.player-banner{border-radius:16px;overflow:hidden;background:linear-gradient(135deg,var(--accent-tint),var(--c-sky-pale));aspect-ratio:21/6;display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px;}
+.player-banner img{width:100%;height:100%;object-fit:cover;}
+.player-layout{display:flex;gap:18px;align-items:flex-start;}
+.player-lessons{width:270px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:16px;padding:10px;position:sticky;top:78px;max-height:calc(100vh - 100px);overflow-y:auto;}
+.player-lesson-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:right;padding:10px 10px;border-radius:11px;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--text2);margin-bottom:2px;}
+.player-lesson-btn:hover{background:var(--bg-alt);}
+.player-lesson-btn.active{background:var(--accent-tint);color:var(--accent-dark);}
+.player-lesson-status{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg-alt);color:var(--text3);}
+.player-lesson-status.done{background:var(--c-green-deep);color:#fff;}
+.player-lesson-btn-body{flex:1;min-width:0;}
+.player-lesson-btn-title{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.player-lesson-btn-meta{font-size:10.5px;color:var(--text3);}
+.player-main{flex:1;min-width:0;background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px 24px;}
+@media (max-width:860px){.player-layout{flex-direction:column;}.player-lessons{width:100%;position:static;max-height:none;}}
+.player-doc-card{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:10px;}
+.player-quiz-q{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.player-quiz-opt{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;margin-top:8px;cursor:pointer;transition:border-color .15s,background .15s;}
+.player-quiz-opt:hover{border-color:var(--accent);}
+.player-quiz-opt.picked{border-color:var(--accent);background:var(--accent-tint);}
+.player-quiz-opt.correct{border-color:var(--c-green-deep);background:var(--c-green-tint);}
+.player-quiz-opt.wrong{border-color:var(--c-red-deep);background:var(--c-red-pale);}
+.player-quiz-opt input{accent-color:var(--accent);}
+.player-quiz-result{border-radius:12px;padding:14px 16px;margin-top:14px;font-weight:700;}
+.player-quiz-result.pass{background:var(--c-green-tint);color:var(--c-green-deep);}
+.player-quiz-result.fail{background:var(--c-red-pale);color:var(--c-red-deep);}
