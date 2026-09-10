@@ -73,7 +73,7 @@ function renderCoverPreview() {
     box.innerHTML = `<img src="${url}" alt="">`;
     removeBtn.style.display = "inline-flex";
   } else if (existingCoverUrl && !coverRemoved) {
-    box.innerHTML = `<img src="${existingCoverUrl}" alt="">`;
+    box.innerHTML = `<img src="${existingCoverUrl}" alt="" onerror="this.parentElement.innerHTML='<i data-lucide=\\'image-off\\' style=\\'width:26px;height:26px\\'></i>';if(window.lucide)lucide.createIcons();">`;
     removeBtn.style.display = "inline-flex";
   } else {
     box.innerHTML = `<i data-lucide="image" style="width:30px;height:30px"></i>`;
@@ -113,6 +113,12 @@ function saveCourse() {
     .then(() => uploadPendingCoverIfAny(courseIdForCover))
     .then(driveFile => {
       if (driveFile) {
+        if (!driveFile.imageUrl) {
+          // อัปโหลดขึ้น Drive สำเร็จแต่ไม่ได้ลิงก์รูปกลับมา — มักเกิดจาก Google Drive API
+          // ยังไม่เปิดใช้งาน หรือ Cloud Function ที่ deploy อยู่เป็นเวอร์ชันเก่ากว่าโค้ดฝั่งเว็บ
+          // โยน error แทนที่จะเซฟ coverUrl เป็น undefined (Firestore ไม่ยอมรับค่านี้)
+          throw new Error("อัปโหลดรูปปกขึ้น Google Drive สำเร็จ แต่ไม่ได้ลิงก์รูปกลับมา — ตรวจสอบว่าเปิดใช้งาน Google Drive API และ deploy Cloud Function เวอร์ชันล่าสุดแล้ว (firebase deploy --only functions,storage)");
+        }
         return ref.set({ coverUrl: driveFile.imageUrl, coverDriveFileId: driveFile.id }, { merge: true });
       } else if (coverRemoved) {
         return ref.set({

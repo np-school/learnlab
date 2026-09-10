@@ -79,7 +79,7 @@ function renderHeader() {
   const bannerEl = document.getElementById("playerBanner");
   if (playerCourse.coverUrl) {
     bannerEl.style.display = "flex";
-    bannerEl.innerHTML = `<img src="${playerCourse.coverUrl}" alt="">`;
+    bannerEl.innerHTML = `<img src="${playerCourse.coverUrl}" alt="" onerror="this.parentElement.style.display='none';">`;
   } else {
     bannerEl.style.display = "none";
   }
