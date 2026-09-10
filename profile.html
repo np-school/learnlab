@@ -12,6 +12,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="shared/styles.css" rel="stylesheet">
 <script src="https://unpkg.com/lucide@1.24.0"></script>
+<style>
+  .portfolio-header{background:linear-gradient(135deg,var(--accent),var(--accent-dark));border-radius:20px;padding:28px 24px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:relative;margin-bottom:18px;}
+  .portfolio-avatar{width:88px;height:88px;border-radius:50%;border:3px solid rgba(255,255,255,.6);object-fit:cover;background:rgba(255,255,255,.2);flex-shrink:0;}
+  .portfolio-body{flex:1;min-width:180px;}
+  .portfolio-name{font-size:21px;font-weight:800;}
+  .portfolio-role{font-size:13px;color:rgba(255,255,255,.88);margin-top:4px;}
+  .portfolio-email{font-size:12px;color:rgba(255,255,255,.75);margin-top:8px;display:flex;align-items:center;gap:6px;}
+  .portfolio-edit-btn{background:rgba(255,255,255,.18);border:none;color:#fff;padding:9px 16px;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .portfolio-edit-btn:hover{background:rgba(255,255,255,.28);}
+
+  .portfolio-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+  .pf-stat{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;}
+  .pf-stat-num{font-size:24px;font-weight:800;color:var(--text);line-height:1;}
+  .pf-stat-label{font-size:11.5px;color:var(--text2);font-weight:700;margin-top:6px;}
+
+  #editSection{display:none;margin-bottom:22px;}
+  #editSection.show{display:block;}
+
+  .section-title{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+
+  .achieve-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .achieve-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;}
+  .achieve-icon{width:44px;height:44px;border-radius:12px;background:var(--c-amber-pale);color:var(--c-amber-deep);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+  .achieve-icon img{width:100%;height:100%;object-fit:cover;}
+  .achieve-title{font-weight:800;font-size:13.5px;line-height:1.4;}
+  .achieve-date{font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:5px;}
+  .achieve-action{margin-top:auto;}
+
+  @media (max-width:600px){
+    .achieve-grid{grid-template-columns:1fr;}
+    .portfolio-header{flex-direction:column;text-align:center;padding:26px 20px;}
+    .portfolio-email{justify-content:center;}
+    .portfolio-edit-btn{width:100%;justify-content:center;}
+  }
+</style>
 </head>
 <body>
 
@@ -32,22 +67,51 @@
 <div class="shell">
   <div class="sidebar" id="sidebar"></div>
   <script>try{if(localStorage.getItem('nplab_sidebar_collapsed')==='1')document.getElementById('sidebar').classList.add('collapsed');}catch(e){}</script>
-  <div class="content" style="max-width:640px;">
+  <div class="content" style="max-width:760px;">
     <div class="page-header">
       <div class="page-title">ข้อมูลส่วนตัว</div>
-      <div class="page-sub">แก้ไขข้อมูลที่ใช้แสดงบนเกียรติบัตรและประวัติการอบรม</div>
+      <div class="page-sub">ประวัติและผลงานการอบรมของคุณ</div>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-title"><i data-lucide="user-circle" style="width:17px;height:17px;color:var(--accent)"></i>ข้อมูลบัญชี</div>
-      <div class="form-grid">
-        <div class="field"><label>อีเมล</label><input id="fEmail" disabled></div>
-        <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="fName"></div>
-        <div class="field"><label>เบอร์โทรศัพท์</label><input id="fPhone"></div>
-        <div class="field"><label>หน่วยงาน / โรงเรียน</label><input id="fOrg"></div>
-        <div class="field"><label>ตำแหน่ง</label><input id="fPosition"></div>
+    <!-- ── การ์ดโปรไฟล์แบบพอร์ตโฟลิโอ ── -->
+    <div class="portfolio-header">
+      <img class="portfolio-avatar" id="pfAvatar" src="" alt="">
+      <div class="portfolio-body">
+        <div class="portfolio-name" id="pfName">–</div>
+        <div class="portfolio-role" id="pfRole">–</div>
+        <div class="portfolio-email"><i data-lucide="mail" style="width:13px;height:13px"></i><span id="pfEmail">–</span></div>
       </div>
-      <button class="btn-primary" style="margin-top:18px;" onclick="saveProfile()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกการเปลี่ยนแปลง</button>
+      <button class="portfolio-edit-btn" id="editToggleBtn" onclick="toggleEdit()"><i data-lucide="pencil" style="width:14px;height:14px"></i><span id="editToggleLabel">แก้ไขข้อมูล</span></button>
+    </div>
+
+    <!-- ── สถิติผลงาน ── -->
+    <div class="portfolio-stats">
+      <div class="pf-stat"><div class="pf-stat-num" id="statDone">0</div><div class="pf-stat-label">เรียนจบแล้ว</div></div>
+      <div class="pf-stat"><div class="pf-stat-num" id="statCert">0</div><div class="pf-stat-label">เกียรติบัตรที่ได้รับ</div></div>
+      <div class="pf-stat"><div class="pf-stat-num" id="statProgress">0</div><div class="pf-stat-label">กำลังเรียนอยู่</div></div>
+    </div>
+
+    <!-- ── ฟอร์มแก้ไขข้อมูล (ซ่อนไว้ก่อน) ── -->
+    <div id="editSection">
+      <div class="form-section">
+        <div class="form-section-title"><i data-lucide="user-circle" style="width:17px;height:17px;color:var(--accent)"></i>ข้อมูลบัญชี</div>
+        <div class="form-grid">
+          <div class="field"><label>อีเมล</label><input id="fEmail" disabled></div>
+          <div class="field"><label>ชื่อ-นามสกุล <span class="req">*</span></label><input id="fName"></div>
+          <div class="field"><label>เบอร์โทรศัพท์</label><input id="fPhone"></div>
+          <div class="field"><label>หน่วยงาน / โรงเรียน</label><input id="fOrg"></div>
+          <div class="field"><label>ตำแหน่ง</label><input id="fPosition"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:18px;" onclick="saveProfile()"><i data-lucide="save" style="width:15px;height:15px"></i>บันทึกการเปลี่ยนแปลง</button>
+      </div>
+    </div>
+
+    <!-- ── ผลงานการอบรมที่เรียนจบแล้ว ── -->
+    <div class="section-title"><i data-lucide="award" style="width:17px;height:17px;color:var(--accent)"></i>การอบรมที่เรียนจบแล้ว</div>
+    <div class="achieve-grid" id="achieveGrid"></div>
+    <div class="empty-state" id="achieveEmpty" style="display:none;">
+      <i data-lucide="award" style="width:34px;height:34px;margin-bottom:8px;color:var(--text3)"></i>
+      ยังไม่มีหลักสูตรที่เรียนจบ<br>เริ่มเรียนหลักสูตรแรกของคุณได้เลย
     </div>
   </div>
 </div>
