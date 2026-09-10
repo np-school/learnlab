@@ -140,10 +140,10 @@ exports.uploadToDrive = onObjectFinalized(
 
       const driveFile = res.data;
 
-      // รูปปกหลักสูตร / รูปภาพแทรกในเนื้อหา / วิดีโออัปโหลด: เปิดสิทธิ์ "ดูได้ทุกคนที่มีลิงก์"
-      // เพื่อให้ฝัง <img src="..."> หรือ <iframe src="..."> แสดง/เล่นได้ทันทีโดยไม่ต้องล็อกอิน
-      // (ไฟล์เอกสารแนบทั่วไป kind="lesson" ยังคงจำกัดสิทธิ์ตามเดิม ต้องเปิดผ่าน webViewLink ที่มีการล็อกอิน)
-      if (kind === "cover" || kind === "image" || kind === "video") {
+      // รูปปกหลักสูตร / รูปภาพแทรกในเนื้อหา / วิดีโออัปโหลด / เอกสารแนบ (kind="lesson"):
+      // เปิดสิทธิ์ "ดูได้ทุกคนที่มีลิงก์" ทั้งหมด เพื่อให้ฝัง <img src="...">, <iframe src="...">
+      // (รวมถึง PDF/เอกสารแนบที่ต้องแสดงตัวอย่างในตัวในหน้าเรียนได้ทันที) โดยผู้เรียนไม่ต้องล็อกอิน
+      if (kind === "cover" || kind === "image" || kind === "video" || kind === "lesson") {
         try {
           await drive.permissions.create({
             fileId: driveFile.id,
@@ -156,6 +156,15 @@ exports.uploadToDrive = onObjectFinalized(
         if (kind === "video") {
           // ใช้ Drive preview viewer แบบฝัง iframe ได้ (รองรับ seek/streaming แบบพื้นฐาน)
           driveFile.embedUrl = "https://drive.google.com/file/d/" + driveFile.id + "/preview";
+        } else if (kind === "lesson") {
+          // เอกสารแนบเนื้อหา — เตรียมลิงก์ preview แบบฝัง iframe ไว้เสมอ (ใช้แสดง PDF แบบอ่านในหน้าได้เลย
+          // และยังพอใช้ได้กับไฟล์ Office ทั่วไปที่ Drive แสดงตัวอย่างได้) และถ้าเป็นรูปภาพ เตรียม imageUrl
+          // สำหรับฝังเป็น <img> ตรงๆ ด้วย
+          driveFile.previewUrl = "https://drive.google.com/file/d/" + driveFile.id + "/preview";
+          if ((obj.contentType || "").startsWith("image/")) {
+            driveFile.imageUrl = (driveFile.thumbnailLink || "").replace(/=s\d+$/, "=s1600") ||
+              ("https://drive.google.com/uc?export=view&id=" + driveFile.id);
+          }
         } else {
           driveFile.imageUrl = (driveFile.thumbnailLink || "").replace(/=s\d+$/, "=s1600") ||
             ("https://drive.google.com/uc?export=view&id=" + driveFile.id);

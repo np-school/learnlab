@@ -118,11 +118,15 @@ function renderLessonNav() {
     const isDone = playerEnrollment.completedLessonIds.includes(l.id);
     const unlocked = isLessonUnlocked(i);
     const isActive = l.id === activeLessonId;
-    const icon = l.type === "text" ? "align-left" : l.type === "quiz" ? "help-circle" : l.type === "video" ? "video" : "file-text";
+    const hasAttachments = (l.attachments && l.attachments.length) || (l.type === "document" && l.fileName);
+    const hasText = !!(l.content && l.content.trim());
+    const icon = l.type === "quiz" ? "help-circle" : l.type === "video" ? "video"
+      : (hasText && hasAttachments) ? "layers" : hasAttachments ? "paperclip" : "align-left";
     const statusInner = isDone
       ? '<i data-lucide="check" style="width:14px;height:14px"></i>'
       : (!unlocked ? '<i data-lucide="lock" style="width:12px;height:12px"></i>' : (i + 1));
-    const typeLabel = l.type === "text" ? "เนื้อหา" : l.type === "quiz" ? "แบบทดสอบ" : l.type === "video" ? "วิดีโอ" : "เอกสารแนบ";
+    const typeLabel = l.type === "quiz" ? "แบบทดสอบ" : l.type === "video" ? "วิดีโอ"
+      : (hasText && hasAttachments) ? "เนื้อหา + ไฟล์แนบ" : hasAttachments ? "เอกสารแนบ" : "เนื้อหา";
     return `
     <button class="player-lesson-btn ${isActive ? "active" : ""} ${!unlocked ? "locked" : ""}"
       onclick="${unlocked ? `selectLesson('${l.id}')` : "lockedLessonClick()"}" ${!unlocked ? 'title="เรียนบทก่อนหน้าให้เสร็จก่อน"' : ""}>
@@ -155,34 +159,8 @@ function selectLesson(lessonId) {
 
   const isDone = playerEnrollment.completedLessonIds.includes(l.id);
 
-  if (l.type === "text") {
-    contentEl.innerHTML = `
-      <h2 style="margin-top:0;">${escapePlayerHtml(l.title || "")}</h2>
-      <div style="font-size:14px;line-height:1.8;">${l.content || "<p>ยังไม่มีเนื้อหา</p>"}</div>
-      <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
-        ${isDone
-          ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
-          : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
-        ${renderNextLessonBtn(l.id)}
-      </div>`;
-  } else if (l.type === "document") {
-    const isImage = (l.fileMimeType || "").startsWith("image/");
-    contentEl.innerHTML = `
-      <h2 style="margin-top:0;">${escapePlayerHtml(l.title || "")}</h2>
-      <div class="player-doc-card">
-        <i data-lucide="${isImage ? "image" : "file-text"}" style="width:26px;height:26px;color:${isImage ? "var(--c-sky-deep)" : "var(--accent)"}"></i>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:14px;">${escapePlayerHtml(l.fileName || (isImage ? "รูปภาพ" : "ไฟล์เอกสาร"))}</div>
-          <div class="hint">${isImage ? "รูปภาพ" : "ไฟล์เอกสาร"} — จัดเก็บบน Google Drive</div>
-        </div>
-        ${l.fileUrl ? `<a class="btn-secondary" href="${l.fileUrl}" target="_blank" rel="noopener"><i data-lucide="external-link" style="width:14px;height:14px"></i>เปิดไฟล์</a>` : ""}
-      </div>
-      <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
-        ${isDone
-          ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
-          : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
-        ${renderNextLessonBtn(l.id)}
-      </div>`;
+  if (l.type === "content" || l.type === "text" || l.type === "document") {
+    renderContentLesson(l, isDone);
   } else if (l.type === "video") {
     contentEl.innerHTML = `
       <h2 style="margin-top:0;">${escapePlayerHtml(l.title || "")}</h2>
@@ -199,6 +177,88 @@ function selectLesson(lessonId) {
     renderQuiz(l, isDone);
   }
   lucide.createIcons();
+}
+
+// ---------------------------------------------------------
+// บทเรียนแบบ "เนื้อหา" — ข้อความและ/หรือไฟล์แนบ (รองรับหลายไฟล์) อยู่ในหน้าเดียวกัน
+// รองรับข้อมูลรูปแบบเก่าด้วย: type='text' (มีแต่ข้อความ) และ type='document' (ไฟล์แนบเดี่ยว)
+// ไฟล์ PDF จะแสดงให้อ่านได้ทันทีแบบฝังในหน้า ไม่ต้องกดเปิดไฟล์แยก
+// ---------------------------------------------------------
+function renderContentLesson(l, isDone) {
+  const contentEl = document.getElementById("lessonContent");
+
+  const attachments = Array.isArray(l.attachments) ? l.attachments
+    : (l.type === "document" && l.fileName)
+      ? [{ name: l.fileName, url: l.fileUrl, mimeType: l.fileMimeType, previewUrl: null, imageUrl: null }]
+      : [];
+  const hasText = !!(l.content && l.content.trim());
+  const hasAttachments = attachments.length > 0;
+
+  let textHtml = "";
+  if (hasText) {
+    textHtml = `
+      ${hasAttachments ? `<div class="player-section-label">เนื้อหา</div>` : ""}
+      <div style="font-size:14px;line-height:1.8;">${l.content}</div>`;
+  }
+
+  let attachHtml = "";
+  if (hasAttachments) {
+    attachHtml = `
+      ${hasText ? `<div class="player-section-label">ไฟล์แนบ${attachments.length > 1 ? ` (${attachments.length} ไฟล์)` : ""}</div>` : ""}
+      ${attachments.map(a => renderAttachmentBlock(a)).join("")}`;
+  }
+
+  if (!hasText && !hasAttachments) {
+    textHtml = `<p style="color:var(--text3);">ยังไม่มีเนื้อหา</p>`;
+  }
+
+  contentEl.innerHTML = `
+    <h2 style="margin-top:0;margin-bottom:4px;">${escapePlayerHtml(l.title || "")}</h2>
+    ${textHtml}
+    ${attachHtml}
+    <div style="margin-top:22px;border-top:1px solid var(--border-soft);padding-top:16px;">
+      ${isDone
+        ? `<span class="badge green"><i data-lucide="check" style="width:12px;height:12px"></i>เรียนแล้ว</span>`
+        : `<button class="btn-primary" onclick="markLessonComplete('${l.id}')"><i data-lucide="check" style="width:14px;height:14px"></i>ทำเครื่องหมายว่าเรียนแล้ว</button>`}
+      ${renderNextLessonBtn(l.id)}
+    </div>`;
+  lucide.createIcons();
+}
+
+// แสดงไฟล์แนบ 1 ไฟล์: PDF → ฝัง iframe อ่านได้ทันที, รูปภาพ → แสดงเป็น <img>, อื่นๆ → การ์ดไฟล์ + ปุ่มเปิดไฟล์
+function renderAttachmentBlock(a) {
+  const mime = a.mimeType || "";
+  const isPdf = mime === "application/pdf";
+  const isImage = mime.startsWith("image/");
+  const link = a.url || a.webViewLink || "";
+
+  if (isPdf && a.previewUrl) {
+    return `
+      <div class="player-attachment-block">
+        <div class="player-attachment-name"><i data-lucide="file-text" style="width:14px;height:14px"></i>${escapePlayerHtml(a.name || "เอกสาร PDF")}</div>
+        <div class="player-pdf-wrap"><iframe src="${a.previewUrl}" allow="autoplay"></iframe></div>
+        ${link ? `<div style="margin-top:6px;"><a class="btn-secondary" href="${link}" target="_blank" rel="noopener"><i data-lucide="external-link" style="width:13px;height:13px"></i>เปิดในแท็บใหม่</a></div>` : ""}
+      </div>`;
+  }
+  if (isImage && a.imageUrl) {
+    return `
+      <div class="player-attachment-block">
+        <div class="player-attachment-name"><i data-lucide="image" style="width:14px;height:14px"></i>${escapePlayerHtml(a.name || "รูปภาพ")}</div>
+        <img class="player-attachment-image" src="${a.imageUrl}" alt="${escapePlayerHtml(a.name || "")}" onerror="this.replaceWith(document.createTextNode(''));">
+      </div>`;
+  }
+  // ไฟล์ประเภทอื่น (Word/PowerPoint/Excel ฯลฯ) หรือไฟล์ที่ยังไม่มีลิงก์ preview สาธารณะ — แสดงเป็นการ์ดไฟล์
+  return `
+    <div class="player-attachment-block">
+      <div class="player-doc-card">
+        <i data-lucide="${isImage ? "image" : "file-text"}" style="width:26px;height:26px;color:${isImage ? "var(--c-sky-deep)" : "var(--accent)"}"></i>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;">${escapePlayerHtml(a.name || "ไฟล์แนบ")}</div>
+          <div class="hint">${isImage ? "รูปภาพ" : "ไฟล์เอกสาร"} — จัดเก็บบน Google Drive</div>
+        </div>
+        ${link ? `<a class="btn-secondary" href="${link}" target="_blank" rel="noopener"><i data-lucide="external-link" style="width:14px;height:14px"></i>เปิดไฟล์</a>` : ""}
+      </div>
+    </div>`;
 }
 
 function renderNextLessonBtn(currentId) {

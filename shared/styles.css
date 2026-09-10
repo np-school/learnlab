@@ -214,6 +214,7 @@ tr:last-child td{border-bottom:none;}
 .lesson-num{font-size:11px;font-weight:800;color:var(--text3);width:18px;text-align:center;flex-shrink:0;}
 .lesson-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .lesson-icon.text{background:var(--accent-tint);color:var(--accent);}
+.lesson-icon.content{background:var(--accent-tint);color:var(--accent);}
 .lesson-icon.document{background:var(--c-sky-pale);color:var(--c-sky-deep);}
 .lesson-icon.quiz{background:var(--c-purple-pale);color:var(--c-purple-deep);}
 .lesson-icon.video{background:var(--c-amber-pale);color:var(--c-amber-deep);}
@@ -244,6 +245,7 @@ tr:last-child td{border-bottom:none;}
 .doc-drop-zone:hover,.doc-drop-zone.dragover{border-color:var(--accent);background:var(--accent-tint);}
 .doc-drop-zone i{color:var(--text3);margin-bottom:6px;}
 .doc-file-card{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-top:10px;}
+.doc-attachment-list{display:flex;flex-direction:column;gap:0;}
 
 .quiz-question-card{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg-alt);}
 .quiz-question-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
@@ -298,6 +300,18 @@ tr:last-child td{border-bottom:none;}
 .player-lesson-status.locked{background:var(--bg-alt);color:var(--text3);}
 .player-video-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000;}
 .player-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+
+/* ── เนื้อหาแบบรวม (ข้อความ + ไฟล์แนบ) ในหน้าเรียน — ให้แยกส่วนชัดเจน อ่านง่าย ── */
+.player-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:4px 10px;border-radius:100px;background:var(--accent-tint);color:var(--accent-dark);margin-bottom:12px;}
+.player-section-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--text3);margin:24px 0 10px;}
+.player-section-label::after{content:"";flex:1;height:1px;background:var(--border-soft);}
+.player-section-label:first-of-type{margin-top:0;}
+.player-attachment-block{margin-bottom:16px;}
+.player-attachment-block:last-child{margin-bottom:0;}
+.player-pdf-wrap{width:100%;height:75vh;min-height:440px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.player-pdf-wrap iframe{width:100%;height:100%;border:0;}
+.player-attachment-image{width:100%;max-height:80vh;object-fit:contain;border-radius:12px;border:1px solid var(--border);display:block;background:var(--bg-alt);}
+.player-attachment-name{font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
 .editor-img-uploading{display:inline-block;padding:4px 10px;background:var(--bg-alt);border-radius:6px;font-size:12px;color:var(--text3);font-weight:700;}
 .btn-secondary.mode-active{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-dark);}
 .player-quiz-q{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;}

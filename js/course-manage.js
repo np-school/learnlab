@@ -2,8 +2,9 @@ let editUser = null;
 let editCourseId = null;
 let lessons = [];          // แคชรายการเนื้อหาของหลักสูตรนี้ เรียงตาม order
 let editingLessonId = null; // null = กำลังเพิ่มใหม่, มีค่า = กำลังแก้ไขรายการเดิม
-let lessonType = "text";    // 'text' | 'document' | 'video' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
-let pendingDriveFile = null; // ผลลัพธ์ไฟล์ที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ (เอกสารแนบ)
+let lessonType = "content"; // 'content' (ข้อความ+เอกสารแนบในบทเดียวกัน) | 'video' | 'quiz' — ประเภทที่โมดัลกำลังเปิดอยู่
+                             // (ค่าเก่า 'text' / 'document' ยังอ่าน/แก้ไขได้ แต่บันทึกใหม่จะรวมเป็น 'content' เสมอ)
+let pendingAttachments = []; // ไฟล์เอกสาร/รูปภาพที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ (แนบได้หลายไฟล์)
 let savedEditorRange = null; // ตำแหน่งเคอร์เซอร์ในกล่องเนื้อหาข้อความ ก่อนเปิด file picker เลือกรูป
 let videoMode = "link";      // 'link' (YouTube/Vimeo) | 'upload' (ไฟล์วิดีโอขึ้น Drive)
 let pendingDriveVideoFile = null; // ผลลัพธ์ไฟล์วิดีโอที่อัปโหลดขึ้น Drive แล้ว รอบันทึกเข้ารายการ
@@ -214,18 +215,31 @@ function renderLessons() {
     return;
   }
   box.innerHTML = lessons.map((l, i) => {
-    const isText = l.type === "text";
+    const isContent = l.type === "content" || l.type === "text" || l.type === "document";
     const isQuiz = l.type === "quiz";
     const isVideo = l.type === "video";
-    const isImage = l.type === "document" && (l.fileMimeType || "").startsWith("image/");
-    const icon = isText ? "align-left" : isQuiz ? "help-circle" : isVideo ? "video" : isImage ? "image" : "file-text";
-    const metaTxt = isText
-      ? (stripHtml(l.content).trim().slice(0, 70) || "ยังไม่มีเนื้อหา")
-      : isQuiz
-      ? `${(l.questions || []).length} คำถาม · ผ่านที่ ${l.passScore != null ? l.passScore : 70}%`
-      : isVideo
-      ? (l.videoMode === "upload" ? `วิดีโอ (ไฟล์: ${l.videoFileName || "-"})` : `วิดีโอ (ลิงก์: ${l.videoSourceUrl || l.videoUrl || "-"})`)
-      : (l.fileName || (isImage ? "รูปภาพ" : "ไฟล์แนบ"));
+
+    // จำนวนไฟล์แนบ: รองรับทั้งรูปแบบใหม่ (attachments[]) และรูปแบบเก่า (document เดี่ยว)
+    const attachments = l.attachments || (l.type === "document" && l.fileName
+      ? [{ name: l.fileName, mimeType: l.fileMimeType, url: l.fileUrl }] : []);
+    const hasText = !!stripHtml(l.content).trim();
+    const icon = isQuiz ? "help-circle" : isVideo ? "video"
+      : (hasText && attachments.length) ? "layers"
+      : attachments.length ? "paperclip"
+      : "align-left";
+
+    let metaTxt;
+    if (isQuiz) {
+      metaTxt = `${(l.questions || []).length} คำถาม · ผ่านที่ ${l.passScore != null ? l.passScore : 70}%`;
+    } else if (isVideo) {
+      metaTxt = l.videoMode === "upload" ? `วิดีโอ (ไฟล์: ${l.videoFileName || "-"})` : `วิดีโอ (ลิงก์: ${l.videoSourceUrl || l.videoUrl || "-"})`;
+    } else {
+      const parts = [];
+      if (hasText) parts.push(stripHtml(l.content).trim().slice(0, 55));
+      if (attachments.length) parts.push(`แนบ ${attachments.length} ไฟล์`);
+      metaTxt = parts.length ? parts.join(" · ") : "ยังไม่มีเนื้อหา";
+    }
+
     return `
     <div class="lesson-item">
       <div class="lesson-order-btns">
@@ -233,13 +247,12 @@ function renderLessons() {
         <button ${i === lessons.length - 1 ? "disabled" : ""} onclick="moveLesson(${i},1)" title="เลื่อนลง"><i data-lucide="chevron-down" style="width:15px;height:15px"></i></button>
       </div>
       <div class="lesson-num">${i + 1}</div>
-      <div class="lesson-icon ${l.type}"><i data-lucide="${icon}" style="width:16px;height:16px"></i></div>
+      <div class="lesson-icon ${isContent ? "content" : l.type}"><i data-lucide="${icon}" style="width:16px;height:16px"></i></div>
       <div class="lesson-info">
         <div class="lesson-title">${escapeHtml(l.title || "(ไม่มีชื่อ)")}</div>
         <div class="lesson-meta">${escapeHtml(metaTxt)}</div>
       </div>
       <div class="lesson-actions">
-        ${(!isText && l.fileUrl) ? `<a class="icon-btn" href="${l.fileUrl}" target="_blank" rel="noopener" title="เปิดไฟล์"><i data-lucide="external-link" style="width:15px;height:15px"></i></a>` : ""}
         <button class="icon-btn" onclick="editLesson('${l.id}')" title="แก้ไข"><i data-lucide="pencil" style="width:15px;height:15px"></i></button>
         <button class="icon-btn danger" onclick="deleteLesson('${l.id}')" title="ลบ"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button>
       </div>
@@ -266,13 +279,13 @@ function moveLesson(index, dir) {
 function openLessonModal(type) {
   editingLessonId = null;
   lessonType = type;
-  pendingDriveFile = null;
-  const titles = { text: "เพิ่มเนื้อหาข้อความ", document: "เพิ่มเอกสารแนบ", video: "เพิ่มวิดีโอ", quiz: "เพิ่มแบบทดสอบ" };
+  pendingAttachments = [];
+  const titles = { content: "เพิ่มเนื้อหา (ข้อความ + เอกสาร/รูปภาพ)", video: "เพิ่มวิดีโอ", quiz: "เพิ่มแบบทดสอบ" };
   document.getElementById("lessonModalTitle").textContent = titles[type] || "เพิ่มเนื้อหา";
   document.getElementById("lessonTitle").value = "";
   document.getElementById("lessonEditor").innerHTML = "";
-  document.getElementById("lessonTextBlock").style.display = type === "text" ? "block" : "none";
-  document.getElementById("lessonDocBlock").style.display = type === "document" ? "block" : "none";
+  document.getElementById("lessonTextBlock").style.display = type === "content" ? "block" : "none";
+  document.getElementById("lessonDocBlock").style.display = type === "content" ? "block" : "none";
   document.getElementById("lessonVideoBlock").style.display = type === "video" ? "block" : "none";
   document.getElementById("lessonQuizBlock").style.display = type === "quiz" ? "block" : "none";
   resetDocUI();
@@ -295,21 +308,27 @@ function editLesson(id) {
   const l = lessons.find(x => x.id === id);
   if (!l) return;
   editingLessonId = id;
-  lessonType = l.type;
-  pendingDriveFile = l.type === "document"
-    ? { id: l.fileId, name: l.fileName, webViewLink: l.fileUrl, mimeType: l.fileMimeType, iconLink: l.fileIconLink }
-    : null;
+  // ค่าเก่า 'text'/'document' ถือเป็น 'content' เสมอตอนแก้ไข (รวมข้อความ+ไฟล์แนบเป็นบทเดียวกัน)
+  // — บันทึกซ้ำจะย้ายข้อมูลไปรูปแบบใหม่โดยอัตโนมัติ
+  lessonType = (l.type === "video" || l.type === "quiz") ? l.type : "content";
 
-  const titles = { text: "แก้ไขเนื้อหาข้อความ", document: "แก้ไขเอกสารแนบ", video: "แก้ไขวิดีโอ", quiz: "แก้ไขแบบทดสอบ" };
-  document.getElementById("lessonModalTitle").textContent = titles[l.type] || "แก้ไขเนื้อหา";
+  if (Array.isArray(l.attachments)) {
+    pendingAttachments = l.attachments.map(a => ({ ...a, webViewLink: a.url || a.webViewLink }));
+  } else if (l.type === "document" && l.fileName) {
+    pendingAttachments = [{ id: l.fileId, name: l.fileName, webViewLink: l.fileUrl, mimeType: l.fileMimeType, iconLink: l.fileIconLink }];
+  } else {
+    pendingAttachments = [];
+  }
+
+  const titles = { content: "แก้ไขเนื้อหา", video: "แก้ไขวิดีโอ", quiz: "แก้ไขแบบทดสอบ" };
+  document.getElementById("lessonModalTitle").textContent = titles[lessonType] || "แก้ไขเนื้อหา";
   document.getElementById("lessonTitle").value = l.title || "";
   document.getElementById("lessonEditor").innerHTML = l.content || "";
-  document.getElementById("lessonTextBlock").style.display = l.type === "text" ? "block" : "none";
-  document.getElementById("lessonDocBlock").style.display = l.type === "document" ? "block" : "none";
-  document.getElementById("lessonVideoBlock").style.display = l.type === "video" ? "block" : "none";
-  document.getElementById("lessonQuizBlock").style.display = l.type === "quiz" ? "block" : "none";
-  resetDocUI();
-  if (l.type === "document" && l.fileName) showDocFileCard(pendingDriveFile);
+  document.getElementById("lessonTextBlock").style.display = lessonType === "content" ? "block" : "none";
+  document.getElementById("lessonDocBlock").style.display = lessonType === "content" ? "block" : "none";
+  document.getElementById("lessonVideoBlock").style.display = lessonType === "video" ? "block" : "none";
+  document.getElementById("lessonQuizBlock").style.display = lessonType === "quiz" ? "block" : "none";
+  resetDocUI(true);
   if (l.type === "video") {
     resetVideoUI();
     if (l.videoMode === "upload") {
@@ -342,17 +361,29 @@ function saveLesson() {
 
   const data = { title, type: lessonType, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
 
-  if (lessonType === "text") {
+  if (lessonType === "content") {
     const html = document.getElementById("lessonEditor").innerHTML.trim();
-    if (!html) { showToast("กรุณากรอกเนื้อหาข้อความ", "error"); return; }
-    data.content = html;
-  } else if (lessonType === "document") {
-    if (!pendingDriveFile) { showToast("กรุณาอัปโหลดไฟล์เอกสารก่อนบันทึก", "error"); return; }
-    data.fileId = pendingDriveFile.id;
-    data.fileName = pendingDriveFile.name;
-    data.fileUrl = pendingDriveFile.webViewLink;
-    data.fileMimeType = pendingDriveFile.mimeType || "";
-    data.fileIconLink = pendingDriveFile.iconLink || "";
+    const hasHtmlContent = !!stripHtml(html).trim() || /<img/i.test(html);
+    if (!hasHtmlContent && !pendingAttachments.length) {
+      showToast("กรุณาใส่เนื้อหาข้อความ หรือแนบไฟล์เอกสาร/รูปภาพอย่างน้อย 1 อย่าง", "error");
+      return;
+    }
+    data.content = hasHtmlContent ? html : "";
+    data.attachments = pendingAttachments.map(f => ({
+      id: f.id || null,
+      name: f.name || "",
+      url: f.webViewLink || f.url || "",
+      mimeType: f.mimeType || "",
+      iconLink: f.iconLink || "",
+      previewUrl: f.previewUrl || null,
+      imageUrl: f.imageUrl || null
+    }));
+    // เคลียร์ฟิลด์รูปแบบเก่า (ถ้าเดิมเป็นบทเรียนแบบ 'document' เดี่ยว) ไม่ให้ข้อมูลซ้ำซ้อนค้างอยู่
+    data.fileId = firebase.firestore.FieldValue.delete();
+    data.fileName = firebase.firestore.FieldValue.delete();
+    data.fileUrl = firebase.firestore.FieldValue.delete();
+    data.fileMimeType = firebase.firestore.FieldValue.delete();
+    data.fileIconLink = firebase.firestore.FieldValue.delete();
   } else if (lessonType === "video") {
     data.videoMode = videoMode;
     if (videoMode === "link") {
@@ -502,14 +533,16 @@ function fmtLink() {
 // ---------------------------------------------------------
 // อัปโหลดเอกสารขึ้น Google Drive (Shared Drive) — ใช้ shared/drive-upload.js
 // ---------------------------------------------------------
-function resetDocUI() {
-  document.getElementById("docFileCard").style.display = "none";
+function resetDocUI(keepAttachments) {
+  if (!keepAttachments) pendingAttachments = [];
   document.getElementById("docProgressWrap").style.display = "none";
   document.getElementById("lessonFileInput").value = "";
+  renderAttachmentList();
 }
 
 function handleFileChosen(e) {
   const file = e.target.files[0];
+  e.target.value = "";
   if (file) uploadDocFile(file);
 }
 function handleFileDrop(e) {
@@ -519,8 +552,9 @@ function handleFileDrop(e) {
   if (file) uploadDocFile(file);
 }
 
+// อัปโหลดไฟล์แนบ 1 ไฟล์ขึ้น Drive แล้วเพิ่มเข้ารายการไฟล์แนบของบทเรียนนี้ (แนบได้หลายไฟล์ต่อเนื่อง)
 function uploadDocFile(file) {
-  document.getElementById("docFileCard").style.display = "none";
+  if (!editCourseId) { showToast("กรุณาบันทึกข้อมูลหลักสูตรก่อนแนบไฟล์", "error"); return; }
   document.getElementById("docProgressWrap").style.display = "block";
   document.getElementById("docProgressFill").style.width = "0%";
   document.getElementById("docProgressText").textContent = "กำลังอัปโหลด " + file.name + "...";
@@ -530,10 +564,10 @@ function uploadDocFile(file) {
     document.getElementById("docProgressFill").style.width = pct + "%";
     document.getElementById("docProgressText").textContent = "กำลังอัปโหลด... " + pct + "%";
   }).then(res => {
-    pendingDriveFile = res;
+    pendingAttachments.push(res);
     document.getElementById("docProgressWrap").style.display = "none";
     document.getElementById("lessonSaveBtn").disabled = false;
-    showDocFileCard(res);
+    renderAttachmentList();
     showToast("อัปโหลดไฟล์ขึ้น Google Drive เรียบร้อย", "success");
   }).catch(err => {
     document.getElementById("docProgressWrap").style.display = "none";
@@ -542,19 +576,31 @@ function uploadDocFile(file) {
   });
 }
 
-function showDocFileCard(f) {
-  const box = document.getElementById("docFileCard");
-  box.style.display = "flex";
-  const isImage = (f.mimeType || "").startsWith("image/");
-  // หมายเหตุ: webViewLink เป็นหน้า viewer ของ Drive ไม่ใช่ URL รูปภาพโดยตรง จึงโชว์เป็นไอคอนแทน
-  // ไม่ใช่ภาพตัวอย่างจริง — ถ้าต้องการ preview จริงต้องเปิดลิงก์ดูที่ Drive
-  box.innerHTML = `
-    <i data-lucide="${isImage ? "image" : "file-text"}" style="width:20px;height:20px;color:${isImage ? "var(--c-sky-deep)" : "var(--accent)"}"></i>
-    <div style="flex:1;min-width:0;">
-      <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(f.name || "")}</div>
-      <div class="hint">${isImage ? "รูปภาพ" : "ไฟล์เอกสาร"} — อัปโหลดขึ้น Google Drive แล้ว${f.webViewLink ? ` · <a href="${f.webViewLink}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;">ดูตัวอย่าง</a>` : ""}</div>
-    </div>
-    <button type="button" class="icon-btn" onclick="document.getElementById('lessonFileInput').click()" title="เปลี่ยนไฟล์"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>`;
+function removeAttachment(idx) {
+  pendingAttachments.splice(idx, 1);
+  renderAttachmentList();
+}
+
+// แสดงรายการไฟล์แนบทั้งหมดของบทเรียนนี้ (pendingAttachments) — แต่ละไฟล์ลบออกเป็นรายไฟล์ได้
+function renderAttachmentList() {
+  const box = document.getElementById("docAttachmentList");
+  if (!pendingAttachments.length) { box.innerHTML = ""; return; }
+  box.innerHTML = pendingAttachments.map((f, i) => {
+    const isImage = (f.mimeType || "").startsWith("image/");
+    const isPdf = f.mimeType === "application/pdf";
+    const icon = isImage ? "image" : isPdf ? "file-text" : "paperclip";
+    const typeLabel = isImage ? "รูปภาพ" : isPdf ? "เอกสาร PDF (แสดงในหน้าเรียนได้ทันที)" : "ไฟล์เอกสาร";
+    const link = f.webViewLink || f.url;
+    return `
+    <div class="doc-file-card">
+      <i data-lucide="${icon}" style="width:20px;height:20px;color:${isImage ? "var(--c-sky-deep)" : "var(--accent)"}"></i>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(f.name || "")}</div>
+        <div class="hint">${typeLabel}${link ? ` · <a href="${link}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;">ดูตัวอย่าง</a>` : ""}</div>
+      </div>
+      <button type="button" class="icon-btn danger" onclick="removeAttachment(${i})" title="ลบไฟล์นี้"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+    </div>`;
+  }).join("");
   lucide.createIcons();
 }
 
