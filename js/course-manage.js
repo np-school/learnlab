@@ -12,7 +12,9 @@ let existingCoverUrl = null;  // coverUrl เดิมที่โหลดม�
 let pendingCoverFile = null;  // ไฟล์รูปปกใหม่ที่ผู้ใช้เพิ่งเลือก รออัปโหลดตอนกดบันทึก
 let coverRemoved = false;     // ผู้ใช้กดลบรูปปกเดิม (ยังไม่ได้กดบันทึก)
 let quizQuestions = [];      // แคชคำถามแบบทดสอบที่กำลังแก้ไขอยู่ในโมดัล
-                              // แต่ละข้อ: { text, options: [string,...], correct: index }
+                              // แต่ละข้อ: { text, image?: {url, name}, options: [string,...], correct: index }
+let quizImageTargetIndex = null;   // index คำถามที่กำลังจะแนบ/เปลี่ยนรูปอยู่ (รอเลือกไฟล์)
+let quizImageUploadingIndex = null; // index คำถามที่กำลังอัปโหลดรูปอยู่ (แสดงสถานะโหลด ไม่ persist)
 
 guardPage(["instructor"], (user, profile) => {
   renderShell("instructor", "course-manage.html", profile);
@@ -320,6 +322,8 @@ function openLessonModal(type) {
   }
   if (type === "quiz") {
     quizQuestions = [];
+    quizImageTargetIndex = null;
+    quizImageUploadingIndex = null;
     document.getElementById("quizPassScore").value = 70;
     renderQuizQuestions();
   }
@@ -366,6 +370,8 @@ function editLesson(id) {
   }
   if (l.type === "quiz") {
     quizQuestions = JSON.parse(JSON.stringify(l.questions || []));
+    quizImageTargetIndex = null;
+    quizImageUploadingIndex = null;
     document.getElementById("quizPassScore").value = l.passScore != null ? l.passScore : 70;
     renderQuizQuestions();
   }
@@ -468,7 +474,7 @@ function deleteLesson(id) {
 // (การตรวจ/บันทึกคะแนนจริงจะอยู่ในหน้าเรียน course-player ที่จะเพิ่มภายหลัง)
 // ---------------------------------------------------------
 function addQuizQuestion() {
-  quizQuestions.push({ text: "", options: ["", ""], correct: 0 });
+  quizQuestions.push({ text: "", image: null, options: ["", ""], correct: 0 });
   renderQuizQuestions();
 }
 
@@ -479,6 +485,42 @@ function removeQuizQuestion(qi) {
 
 function updateQuizQuestionText(qi, val) {
   quizQuestions[qi].text = val;
+}
+
+// เลือกไฟล์รูปภาพแนบกับคำถามข้อที่ qi — อัปโหลดขึ้น Google Drive ผ่าน pipeline เดียวกับรูปในเนื้อหา
+function triggerQuizImageUpload(qi) {
+  if (!editCourseId) { showToast("กรุณาบันทึกข้อมูลหลักสูตรก่อนแนบรูปภาพ", "error"); return; }
+  quizImageTargetIndex = qi;
+  document.getElementById("quizImageInput").click();
+}
+
+function handleQuizImageChosen(e) {
+  const file = e.target.files[0];
+  e.target.value = "";
+  const qi = quizImageTargetIndex;
+  quizImageTargetIndex = null;
+  if (!file || qi == null || !quizQuestions[qi]) return;
+  if (!file.type.startsWith("image/")) { showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error"); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast("ขนาดรูปต้องไม่เกิน 5MB", "error"); return; }
+
+  quizImageUploadingIndex = qi;
+  renderQuizQuestions();
+
+  uploadFileToDrive(file, editCourseId, () => {}, "image").then(driveFile => {
+    quizQuestions[qi].image = { url: driveFile.imageUrl, name: file.name };
+    showToast("แนบรูปภาพเรียบร้อย", "success");
+  }).catch(err => {
+    showToast("แนบรูปภาพไม่สำเร็จ: " + (err.message || err), "error");
+  }).finally(() => {
+    quizImageUploadingIndex = null;
+    renderQuizQuestions();
+  });
+}
+
+function removeQuizImage(qi) {
+  if (!quizQuestions[qi]) return;
+  quizQuestions[qi].image = null;
+  renderQuizQuestions();
 }
 
 function addQuizOption(qi) {
@@ -523,6 +565,21 @@ function renderQuizQuestions() {
       </div>
       <input type="text" placeholder="พิมพ์คำถาม..." value="${escapeHtml(q.text)}"
         oninput="updateQuizQuestionText(${qi}, this.value)">
+      <div class="quiz-question-image-row">
+        <div class="quiz-question-image-box">
+          ${quizImageUploadingIndex === qi
+            ? `<div class="spinner-sm"></div>`
+            : q.image && q.image.url
+              ? `<img src="${q.image.url}" alt="${escapeHtml(q.image.name || "")}">`
+              : `<i data-lucide="image" style="width:20px;height:20px"></i>`}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn-secondary" style="padding:6px 12px;font-size:12.5px;" onclick="triggerQuizImageUpload(${qi})" ${quizImageUploadingIndex === qi ? "disabled" : ""}>
+            <i data-lucide="upload" style="width:13px;height:13px"></i>${q.image ? "เปลี่ยนรูปภาพ" : "แนบรูปภาพ"}
+          </button>
+          ${q.image ? `<button type="button" class="btn-secondary" style="padding:6px 12px;font-size:12.5px;" onclick="removeQuizImage(${qi})"><i data-lucide="trash-2" style="width:13px;height:13px"></i>ลบรูปภาพ</button>` : ""}
+        </div>
+      </div>
       ${q.options.map((opt, oi) => `
         <div class="quiz-option-row ${q.correct === oi ? "correct" : ""}">
           <input type="radio" name="qcorrect_${qi}" ${q.correct === oi ? "checked" : ""} onchange="setQuizCorrect(${qi}, ${oi})" title="ตั้งเป็นเฉลย">

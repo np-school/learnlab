@@ -223,6 +223,7 @@
         <div class="hint" style="margin-top:4px;">ผู้เรียนต้องทำคะแนนถึงเกณฑ์นี้จึงจะถือว่าผ่านแบบทดสอบชุดนี้ — ทำซ้ำได้ไม่จำกัดจำนวนครั้ง</div>
       </div>
       <div class="hint" style="margin-bottom:10px;">คลิกวงกลมหน้าตัวเลือกที่ถูกต้องเพื่อกำหนดเป็นเฉลยของแต่ละข้อ</div>
+      <input type="file" id="quizImageInput" accept="image/*" style="display:none" onchange="handleQuizImageChosen(event)">
       <div id="quizQuestionList"></div>
       <div class="quiz-add-question-row">
         <button type="button" class="btn-secondary" onclick="addQuizQuestion()"><i data-lucide="plus" style="width:14px;height:14px"></i>เพิ่มคำถาม</button>

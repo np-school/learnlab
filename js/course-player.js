@@ -292,6 +292,7 @@ function renderQuiz(l, isDone) {
   const qHtml = questions.map((q, qi) => `
     <div class="player-quiz-q">
       <div style="font-weight:700;font-size:13.5px;margin-bottom:4px;">ข้อที่ ${qi + 1}. ${escapePlayerHtml(q.text || "")}</div>
+      ${q.image && q.image.url ? `<img class="quiz-q-image" src="${q.image.url}" alt="${escapePlayerHtml(q.image.name || "")}" onerror="this.remove();">` : ""}
       ${(q.options || []).map((opt, oi) => {
         let cls = "";
         if (quizSubmitted) {
