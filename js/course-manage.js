@@ -118,12 +118,13 @@ function renderLessons() {
   box.innerHTML = lessons.map((l, i) => {
     const isText = l.type === "text";
     const isQuiz = l.type === "quiz";
-    const icon = isText ? "align-left" : (isQuiz ? "help-circle" : "file-text");
+    const isImage = l.type === "document" && (l.fileMimeType || "").startsWith("image/");
+    const icon = isText ? "align-left" : isQuiz ? "help-circle" : isImage ? "image" : "file-text";
     const metaTxt = isText
       ? (stripHtml(l.content).trim().slice(0, 70) || "ยังไม่มีเนื้อหา")
       : isQuiz
       ? `${(l.questions || []).length} คำถาม · ผ่านที่ ${l.passScore != null ? l.passScore : 70}%`
-      : (l.fileName || "ไฟล์แนบ");
+      : (l.fileName || (isImage ? "รูปภาพ" : "ไฟล์แนบ"));
     return `
     <div class="lesson-item">
       <div class="lesson-order-btns">
@@ -308,6 +309,7 @@ function updateQuizOptionText(qi, oi, val) {
 
 function setQuizCorrect(qi, oi) {
   quizQuestions[qi].correct = oi;
+  renderQuizQuestions();
 }
 
 function renderQuizQuestions() {
@@ -327,14 +329,15 @@ function renderQuizQuestions() {
         <button type="button" class="icon-btn danger" onclick="removeQuizQuestion(${qi})" title="ลบคำถามนี้"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
       </div>
       <input type="text" placeholder="พิมพ์คำถาม..." value="${escapeHtml(q.text)}"
-        style="margin-bottom:10px;" oninput="updateQuizQuestionText(${qi}, this.value)">
+        oninput="updateQuizQuestionText(${qi}, this.value)">
       ${q.options.map((opt, oi) => `
-        <div class="quiz-option-row">
+        <div class="quiz-option-row ${q.correct === oi ? "correct" : ""}">
           <input type="radio" name="qcorrect_${qi}" ${q.correct === oi ? "checked" : ""} onchange="setQuizCorrect(${qi}, ${oi})" title="ตั้งเป็นเฉลย">
+          <span class="quiz-option-letter">${String.fromCharCode(65 + oi)}</span>
           <input type="text" placeholder="ตัวเลือกที่ ${oi + 1}" value="${escapeHtml(opt)}" oninput="updateQuizOptionText(${qi}, ${oi}, this.value)">
           ${q.options.length > 2 ? `<button type="button" class="icon-btn danger" onclick="removeQuizOption(${qi},${oi})" title="ลบตัวเลือกนี้"><i data-lucide="x" style="width:14px;height:14px"></i></button>` : ""}
         </div>`).join("")}
-      <button type="button" class="btn-secondary" style="margin-top:4px;padding:6px 12px;font-size:12.5px;" onclick="addQuizOption(${qi})"><i data-lucide="plus" style="width:13px;height:13px"></i>เพิ่มตัวเลือก</button>
+      <button type="button" class="btn-secondary" style="margin-top:10px;padding:6px 12px;font-size:12.5px;" onclick="addQuizOption(${qi})"><i data-lucide="plus" style="width:13px;height:13px"></i>เพิ่มตัวเลือก</button>
     </div>`).join("");
   lucide.createIcons();
 }
@@ -403,11 +406,14 @@ function uploadDocFile(file) {
 function showDocFileCard(f) {
   const box = document.getElementById("docFileCard");
   box.style.display = "flex";
+  const isImage = (f.mimeType || "").startsWith("image/");
+  // หมายเหตุ: webViewLink เป็นหน้า viewer ของ Drive ไม่ใช่ URL รูปภาพโดยตรง จึงโชว์เป็นไอคอนแทน
+  // ไม่ใช่ภาพตัวอย่างจริง — ถ้าต้องการ preview จริงต้องเปิดลิงก์ดูที่ Drive
   box.innerHTML = `
-    <i data-lucide="file-text" style="width:20px;height:20px;color:var(--accent)"></i>
+    <i data-lucide="${isImage ? "image" : "file-text"}" style="width:20px;height:20px;color:${isImage ? "var(--c-sky-deep)" : "var(--accent)"}"></i>
     <div style="flex:1;min-width:0;">
       <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(f.name || "")}</div>
-      <div class="hint">อัปโหลดขึ้น Google Drive แล้ว</div>
+      <div class="hint">${isImage ? "รูปภาพ" : "ไฟล์เอกสาร"} — อัปโหลดขึ้น Google Drive แล้ว${f.webViewLink ? ` · <a href="${f.webViewLink}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700;">ดูตัวอย่าง</a>` : ""}</div>
     </div>
     <button type="button" class="icon-btn" onclick="document.getElementById('lessonFileInput').click()" title="เปลี่ยนไฟล์"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>`;
   lucide.createIcons();

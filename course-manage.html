@@ -64,7 +64,7 @@
         <div id="lessonList" class="lesson-list"></div>
         <div class="lesson-add-row">
           <button class="btn-secondary" onclick="openLessonModal('text')"><i data-lucide="type" style="width:15px;height:15px"></i>เพิ่มเนื้อหาข้อความ</button>
-          <button class="btn-secondary" onclick="openLessonModal('document')"><i data-lucide="file-up" style="width:15px;height:15px"></i>เพิ่มเอกสารแนบ</button>
+          <button class="btn-secondary" onclick="openLessonModal('document')"><i data-lucide="file-up" style="width:15px;height:15px"></i>เพิ่มเอกสาร/รูปภาพ</button>
           <button class="btn-secondary" onclick="openLessonModal('quiz')"><i data-lucide="help-circle" style="width:15px;height:15px"></i>เพิ่มแบบทดสอบ</button>
         </div>
       </div>
@@ -104,9 +104,9 @@
       <div id="lessonEditor" class="rich-editor" contenteditable="true" data-placeholder="พิมพ์เนื้อหาที่นี่..."></div>
     </div>
 
-    <!-- เอกสารแนบ -->
+    <!-- เอกสารแนบ / รูปภาพ -->
     <div id="lessonDocBlock" style="display:none;">
-      <label style="font-size:12.5px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">ไฟล์เอกสาร</label>
+      <label style="font-size:12.5px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">ไฟล์เอกสารหรือรูปภาพ</label>
       <div id="docDropZone" class="doc-drop-zone"
            onclick="document.getElementById('lessonFileInput').click()"
            ondragover="event.preventDefault();this.classList.add('dragover');"
@@ -114,9 +114,9 @@
            ondrop="handleFileDrop(event)">
         <i data-lucide="upload-cloud" style="width:26px;height:26px"></i>
         <div style="font-size:13px;font-weight:700;">คลิกเพื่อเลือกไฟล์ หรือวางไฟล์ที่นี่</div>
-        <div class="hint" style="margin-top:3px;">อัปโหลดขึ้น Google Drive (Shared Drive) โดยอัตโนมัติ</div>
+        <div class="hint" style="margin-top:3px;">รองรับทั้งไฟล์เอกสาร (PDF, Word, PowerPoint ฯลฯ) และรูปภาพ (JPG, PNG ฯลฯ) — อัปโหลดขึ้น Google Drive (Shared Drive) โดยอัตโนมัติ</div>
       </div>
-      <input type="file" id="lessonFileInput" style="display:none" onchange="handleFileChosen(event)">
+      <input type="file" id="lessonFileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*" style="display:none" onchange="handleFileChosen(event)">
       <div id="docFileCard" class="doc-file-card" style="display:none;"></div>
       <div id="docProgressWrap" style="display:none;margin-top:10px;">
         <div class="progress-track"><div class="progress-fill" id="docProgressFill" style="width:0%"></div></div>
@@ -131,6 +131,7 @@
         <input id="quizPassScore" type="number" min="1" max="100" value="70">
         <div class="hint" style="margin-top:4px;">ผู้เรียนต้องทำคะแนนถึงเกณฑ์นี้จึงจะถือว่าผ่านแบบทดสอบชุดนี้ — ทำซ้ำได้ไม่จำกัดจำนวนครั้ง</div>
       </div>
+      <div class="hint" style="margin-bottom:10px;">คลิกวงกลมหน้าตัวเลือกที่ถูกต้องเพื่อกำหนดเป็นเฉลยของแต่ละข้อ</div>
       <div id="quizQuestionList"></div>
       <div class="quiz-add-question-row">
         <button type="button" class="btn-secondary" onclick="addQuizQuestion()"><i data-lucide="plus" style="width:14px;height:14px"></i>เพิ่มคำถาม</button>
